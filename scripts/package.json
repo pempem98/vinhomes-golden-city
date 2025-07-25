@@ -1,15 +1,29 @@
 {
-  "name": "scripts",
+  "name": "real-estate-scripts",
   "version": "1.0.0",
-  "description": "This directory contains utility scripts for managing the Real-Time Apartment Dashboard.",
-  "main": "load-sample-data.js",
+  "description": "Utility scripts for Real Estate Dashboard - Database initialization and live updates simulation",
+  "main": "init-database.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "init": "node init-database.js",
+    "simulate": "node simulate-live-updates.js",
+    "clean": "node -e \"const fs = require('fs'); const path = '../backend/database.sqlite'; if (fs.existsSync(path)) { fs.unlinkSync(path); console.log('✅ Database cleaned'); } else { console.log('⚠️  No database found'); }\"",
+    "install:all": "npm install",
+    "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "real-estate",
+    "database",
+    "simulation",
+    "sqlite",
+    "dashboard"
+  ],
+  "author": "Real Estate Dashboard Team",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^1.11.0"
+    "axios": "^1.11.0",
+    "sqlite3": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

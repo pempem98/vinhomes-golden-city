@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = 'http://localhost:3001';
 const SIMULATION_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
 const UPDATE_INTERVAL = 3000; // Update every 3 seconds
 
