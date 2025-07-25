@@ -1,0 +1,209 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #023020 0%, #034d35 50%, #045a42 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.app-container {
+  background-color: rgba(2, 48, 32, 0.95);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #ffffff;
+}
+
+.dashboard-title {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.apartment-table-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.apartment-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.apartment-table th {
+  background-color: #023020;
+  color: #ffffff;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.apartment-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.apartment-table tr {
+  transition: all 0.5s ease;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.apartment-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+/* Status-based row styling */
+.apartment-table tr.status-sold {
+  background-color: #a84343 !important;
+  color: white !important;
+}
+
+.apartment-table tr.status-sold:hover {
+  background-color: #c55555 !important;
+}
+
+.apartment-table tr.status-locked {
+  background-color: #f7b731 !important;
+  color: #333 !important;
+}
+
+.apartment-table tr.status-locked:hover {
+  background-color: #ffc048 !important;
+}
+
+.apartment-table tr.status-available {
+  background-color: #4a7c59 !important;
+  color: white !important;
+}
+
+.apartment-table tr.status-available:hover {
+  background-color: #5a9c69 !important;
+}
+
+/* Simple highlight for updated rows */
+.newly-updated {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 10px;
+  }
+  
+  .dashboard-title {
+    font-size: 2rem;
+  }
+  
+  .apartment-table-container {
+    padding: 15px;
+  }
+  
+  .apartment-table {
+    font-size: 0.9rem;
+  }
+  
+  .apartment-table th,
+  .apartment-table td {
+    padding: 8px 6px;
+  }
+  
+  .slide-to-top {
+    --slide-duration: 0.9s;
+  }
+  
+  .slide-to-top::before {
+    animation-duration: 0.9s;
+  }
+}
+
+@media (max-width: 480px) {
+  .apartment-table {
+    font-size: 0.8rem;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+  
+  .dashboard-subtitle {
+    font-size: 1rem;
+  }
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.loading-spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-right: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Connection status indicator */
+.connection-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 1000;
+}
+
+.connection-status.connected {
+  background-color: rgba(40, 167, 69, 0.9);
+  color: white;
+}
+
+.connection-status.disconnected {
+  background-color: rgba(220, 53, 69, 0.9);
+  color: white;
+}
