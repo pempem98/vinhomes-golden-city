@@ -159,8 +159,9 @@ Health check endpoint.
 ### Theme
 
 - **Primary Color**: Dark Royal Green (#023020)
-- **Background**: Semi-transparent overlay on background image
+- **Background**: Beautiful background image with gradient overlay for depth and readability
 - **Text**: White text with shadows for readability
+- **Image**: Custom background.jpg with semi-transparent green gradient overlay
 
 ## Deployment
 

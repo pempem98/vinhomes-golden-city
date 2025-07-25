@@ -44,25 +44,34 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-        {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+      {/* Left Banner */}
+      <div className="left-banner"></div>
+      
+      {/* Main Content */}
+      <div className="main-content">
+        <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+          {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+        </div>
+        
+        <header className="dashboard-header">
+          <h1 className="dashboard-title">Real-Time Apartment Dashboard</h1>
+          <p className="dashboard-subtitle">Live updates from Google Sheets</p>
+        </header>
+
+        <main className="apartment-table-container">
+          {isLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              Loading data...
+            </div>
+          ) : (
+            <ApartmentTable apartments={apartments} />
+          )}
+        </main>
       </div>
       
-      <header className="dashboard-header">
-        <h1 className="dashboard-title">Real-Time Apartment Dashboard</h1>
-        <p className="dashboard-subtitle">Live updates from Google Sheets</p>
-      </header>
-
-      <main className="apartment-table-container">
-        {isLoading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            Loading data...
-          </div>
-        ) : (
-          <ApartmentTable apartments={apartments} />
-        )}
-      </main>
+      {/* Right Banner */}
+      <div className="right-banner"></div>
     </div>
   );
 }
