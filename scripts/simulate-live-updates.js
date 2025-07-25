@@ -6,27 +6,27 @@ const UPDATE_INTERVAL = 3000; // Update every 3 seconds
 
 // Base apartment data
 const apartments = [
-  { apartment_id: 'A101', agency: 'Sunshine Properties', area: 85.5, price: 6.2 },
-  { apartment_id: 'A102', agency: 'Green Valley Real Estate', area: 92.0, price: 7.1 },
-  { apartment_id: 'A103', agency: 'City View Homes', area: 78.5, price: 5.8 },
-  { apartment_id: 'B201', agency: 'Premium Living Group', area: 105.0, price: 8.5 },
-  { apartment_id: 'B202', agency: 'Metro Properties', area: 98.5, price: 7.8 },
-  { apartment_id: 'B203', agency: 'Luxury Estates Ltd', area: 110.0, price: 9.2 },
-  { apartment_id: 'C301', agency: 'Ocean View Realty', area: 125.0, price: 11.5 },
-  { apartment_id: 'C302', agency: 'Skyline Properties', area: 100.0, price: 8.8 },
-  { apartment_id: 'C303', agency: 'Golden Gate Homes', area: 85.0, price: 6.5 },
-  { apartment_id: 'D401', agency: 'Royal Residence', area: 115.5, price: 9.8 },
-  { apartment_id: 'D402', agency: 'Diamond Estates', area: 130.0, price: 12.2 },
-  { apartment_id: 'D403', agency: 'Elite Properties', area: 95.0, price: 7.9 },
-  { apartment_id: 'PH501', agency: 'Penthouse Collection', area: 200.0, price: 25.5 },
-  { apartment_id: 'PH502', agency: 'Luxury Living VIP', area: 180.5, price: 22.8 },
-  { apartment_id: 'PH503', agency: 'Top Floor Estates', area: 220.0, price: 28.9 },
-  { apartment_id: 'E101', agency: 'Garden View Properties', area: 88.5, price: 6.8 },
-  { apartment_id: 'E102', agency: 'Riverside Homes', area: 95.0, price: 7.2 },
-  { apartment_id: 'E103', agency: 'Mountain View Realty', area: 125.0, price: 10.2 },
-  { apartment_id: 'F201', agency: 'Central Park Properties', area: 82.0, price: 5.8 },
-  { apartment_id: 'F202', agency: 'Downtown Living', area: 78.5, price: 5.2 },
-  { apartment_id: 'F203', agency: 'Urban Homes Group', area: 120.5, price: 8.5 }
+  { id: 'A101', agency: 'Sunshine Properties', area: 85.5, price: 6.2 },
+  { id: 'A102', agency: 'Green Valley Real Estate', area: 92.0, price: 7.1 },
+  { id: 'A103', agency: 'City View Homes', area: 78.5, price: 5.8 },
+  { id: 'B201', agency: 'Premium Living Group', area: 105.0, price: 8.5 },
+  { id: 'B202', agency: 'Metro Properties', area: 98.5, price: 7.8 },
+  { id: 'B203', agency: 'Luxury Estates Ltd', area: 110.0, price: 9.2 },
+  { id: 'C301', agency: 'Ocean View Realty', area: 125.0, price: 11.5 },
+  { id: 'C302', agency: 'Skyline Properties', area: 100.0, price: 8.8 },
+  { id: 'C303', agency: 'Golden Gate Homes', area: 85.0, price: 6.5 },
+  { id: 'D401', agency: 'Royal Residence', area: 115.5, price: 9.8 },
+  { id: 'D402', agency: 'Diamond Estates', area: 130.0, price: 12.2 },
+  { id: 'D403', agency: 'Elite Properties', area: 95.0, price: 7.9 },
+  { id: 'PH501', agency: 'Penthouse Collection', area: 200.0, price: 25.5 },
+  { id: 'PH502', agency: 'Luxury Living VIP', area: 180.5, price: 22.8 },
+  { id: 'PH503', agency: 'Top Floor Estates', area: 220.0, price: 28.9 },
+  { id: 'E101', agency: 'Garden View Properties', area: 88.5, price: 6.8 },
+  { id: 'E102', agency: 'Riverside Homes', area: 95.0, price: 7.2 },
+  { id: 'E103', agency: 'Mountain View Realty', area: 125.0, price: 10.2 },
+  { id: 'F201', agency: 'Central Park Properties', area: 82.0, price: 5.8 },
+  { id: 'F202', agency: 'Downtown Living', area: 78.5, price: 5.2 },
+  { id: 'F203', agency: 'Urban Homes Group', area: 120.5, price: 8.5 }
 ];
 
 // Status options
@@ -110,7 +110,7 @@ async function simulateUpdate() {
     }
     
     const updateData = {
-      apartment_id: apartment.apartment_id,
+      id: apartment.id,
       agency: agency,
       area: apartment.area,
       price: price,
@@ -128,7 +128,7 @@ async function simulateUpdate() {
     const remaining = formatTime(SIMULATION_DURATION - elapsed);
     const statusEmoji = newStatus === 'Đã bán' ? '🔴' : newStatus === 'Đang Lock' ? '🟡' : '🟢';
     
-    console.log(`[${remaining}] ${statusEmoji} ${apartment.apartment_id} → ${newStatus} | ${agency.substring(0, 25)}${agency.length > 25 ? '...' : ''} | ${price} tỷ`);
+    console.log(`[${remaining}] ${statusEmoji} ${apartment.id} → ${newStatus} | ${agency.substring(0, 25)}${agency.length > 25 ? '...' : ''} | ${price} tỷ`);
     
   } catch (error) {
     console.log(`❌ Update failed: ${error.message}`);

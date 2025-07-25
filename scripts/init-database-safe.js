@@ -5,7 +5,7 @@ const fs = require('fs');
 // Database path - relative to backend directory
 const DB_PATH = path.join(__dirname, '..', 'backend', 'database.sqlite');
 
-// Initial sample data  
+// Initial sample data
 const sampleApartments = [
   { id: 'A101', agency: 'Sunshine Properties', area: 85.5, price: 6.2, status: 'Còn trống' },
   { id: 'A102', agency: 'Green Valley Real Estate', area: 92.0, price: 7.1, status: 'Còn trống' },
@@ -24,34 +24,8 @@ const sampleApartments = [
   { id: 'PH503', agency: 'Top Floor Estates', area: 220.0, price: 28.9, status: 'Còn trống' }
 ];
 
-console.log('🏗️  Initializing Real Estate Database');
-console.log('='.repeat(50));
-
-// Function to check if database is in use
-function isDatabaseInUse() {
-  if (!fs.existsSync(DB_PATH)) return false;
-  
-  try {
-    // Try to open the database file with exclusive access
-    const fd = fs.openSync(DB_PATH, 'r+');
-    fs.closeSync(fd);
-    return false;
-  } catch (error) {
-    return error.code === 'EBUSY' || error.code === 'ENOENT';
-  }
-}
-
-// Check if database is currently in use
-if (fs.existsSync(DB_PATH) && isDatabaseInUse()) {
-  console.log('⚠️  Database appears to be in use by another process.');
-  console.log('   This usually means the backend server is running.');
-  console.log('   Please stop the backend server first, then run this script again.');
-  console.log('');
-  console.log('   Steps:');
-  console.log('   1. Stop backend server (Ctrl+C in backend terminal)');
-  console.log('   2. Run this script again');
-  process.exit(1);
-}
+console.log('🔄 Safe Database Initialization (Non-destructive)');
+console.log('='.repeat(55));
 
 // Ensure backend directory exists
 const backendDir = path.dirname(DB_PATH);
@@ -60,37 +34,24 @@ if (!fs.existsSync(backendDir)) {
   fs.mkdirSync(backendDir, { recursive: true });
 }
 
-// Remove existing database if it exists
-if (fs.existsSync(DB_PATH)) {
-  console.log('🗑️  Removing existing database...');
-  try {
-    fs.unlinkSync(DB_PATH);
-    console.log('✅ Existing database removed');
-  } catch (error) {
-    if (error.code === 'EBUSY') {
-      console.log('⚠️  Database is currently in use. Please stop the backend server first.');
-      console.log('   Then run this script again.');
-      process.exit(1);
-    } else {
-      console.error('❌ Error removing database:', error.message);
-      process.exit(1);
-    }
-  }
+const dbExists = fs.existsSync(DB_PATH);
+if (dbExists) {
+  console.log('📊 Database file exists, will add/update data safely...');
+} else {
+  console.log('📊 Creating new database...');
 }
-
-console.log('📊 Creating new database...');
 
 const db = new sqlite3.Database(DB_PATH, (err) => {
   if (err) {
-    console.error('❌ Error creating database:', err.message);
+    console.error('❌ Error opening database:', err.message);
     process.exit(1);
   }
-  console.log('✅ Database file created successfully');
+  console.log('✅ Database connection established');
 });
 
-// Create apartments table
+// Create apartments table if it doesn't exist
 const createTableSQL = `
-  CREATE TABLE apartments (
+  CREATE TABLE IF NOT EXISTS apartments (
     id TEXT PRIMARY KEY,
     agency TEXT,
     area REAL,
@@ -105,17 +66,17 @@ db.run(createTableSQL, (err) => {
     console.error('❌ Error creating table:', err.message);
     process.exit(1);
   }
-  console.log('🏢 Apartments table created successfully');
+  console.log('🏢 Apartments table ready');
   
-  // Insert sample data
-  console.log('📝 Inserting sample data...');
+  // Insert or update sample data
+  console.log('📝 Processing sample data...');
   
   const insertSQL = `
-    INSERT INTO apartments (id, agency, area, price, status)
+    INSERT OR REPLACE INTO apartments (id, agency, area, price, status)
     VALUES (?, ?, ?, ?, ?)
   `;
   
-  let insertedCount = 0;
+  let processedCount = 0;
   const totalCount = sampleApartments.length;
   
   sampleApartments.forEach((apartment, index) => {
@@ -127,13 +88,13 @@ db.run(createTableSQL, (err) => {
       apartment.status
     ], function(err) {
       if (err) {
-        console.error(`❌ Error inserting ${apartment.id}:`, err.message);
+        console.error(`❌ Error processing ${apartment.id}:`, err.message);
       } else {
-        insertedCount++;
-        console.log(`✅ Inserted: ${apartment.id} - ${apartment.agency} - ${apartment.status}`);
+        processedCount++;
+        console.log(`✅ Processed: ${apartment.id} - ${apartment.agency} - ${apartment.status}`);
         
         // Check if all inserts are complete
-        if (insertedCount === totalCount) {
+        if (processedCount === totalCount) {
           console.log('\n📋 Database Summary:');
           console.log('='.repeat(50));
           
@@ -152,19 +113,24 @@ db.run(createTableSQL, (err) => {
                 console.log(`${emoji} ${row.status}: ${row.count} apartments`);
               });
               
-              console.log(`📊 Total: ${totalCount} apartments`);
-              console.log(`💾 Database: ${DB_PATH}`);
-              console.log('\n🎉 Database initialization complete!');
-              console.log('🚀 You can now start the backend server and simulate live updates');
+              // Get total count
+              db.get('SELECT COUNT(*) as total FROM apartments', (err, row) => {
+                if (!err) {
+                  console.log(`📊 Total: ${row.total} apartments`);
+                }
+                console.log(`💾 Database: ${DB_PATH}`);
+                console.log('\n🎉 Safe database initialization complete!');
+                console.log('🚀 Backend server can continue running');
+                
+                // Close database
+                db.close((err) => {
+                  if (err) {
+                    console.error('❌ Error closing database:', err.message);
+                  }
+                  process.exit(0);
+                });
+              });
             }
-            
-            // Close database
-            db.close((err) => {
-              if (err) {
-                console.error('❌ Error closing database:', err.message);
-              }
-              process.exit(0);
-            });
           });
         }
       }

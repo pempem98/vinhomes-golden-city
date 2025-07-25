@@ -7,7 +7,7 @@
 // Replace this with your actual backend URL
 const WEBHOOK_URL = 'https://your-backend-url.com/api/update-sheet';
 // For local development, you might use something like:
-// const WEBHOOK_URL = 'http://localhost:5000/api/update-sheet';
+// const WEBHOOK_URL = 'http://localhost:3001/api/update-sheet';
 
 /**
  * Trigger function that runs when any cell is edited
@@ -39,9 +39,9 @@ function onEdit(e) {
     const rowData = sheet.getRange(editedRow, 1, 1, 5).getValues()[0];
     
     // Map the row data to the expected JSON structure
-    // Columns mapping: Column A=apartment_id, B=agency, C=area, D=price, E=status
+    // Columns mapping: Column A=id, B=agency, C=area, D=price, E=status
     const payload = {
-      apartment_id: rowData[0] || '',
+      id: rowData[0] || '',
       agency: rowData[1] || '',
       area: parseFloat(rowData[2]) || 0,
       price: parseFloat(rowData[3]) || 0,
@@ -49,12 +49,12 @@ function onEdit(e) {
     };
     
     // Validate that we have at least the apartment ID
-    if (!payload.apartment_id) {
+    if (!payload.id) {
       console.log('No apartment ID found, skipping update...');
       return;
     }
     
-    console.log('Sending update for apartment:', payload.apartment_id);
+    console.log('Sending update for apartment:', payload.id);
     console.log('Payload:', JSON.stringify(payload));
     
     // Send the data to the backend webhook
@@ -87,7 +87,7 @@ function onEdit(e) {
  */
 function testWebhook() {
   const testPayload = {
-    apartment_id: 'TEST01',
+    id: 'TEST01',
     agency: 'Test Agency',
     area: 85.5,
     price: 6.2,
@@ -136,7 +136,7 @@ function syncAllData() {
       const rowData = values[i];
       
       const payload = {
-        apartment_id: rowData[0] || '',
+        id: rowData[0] || '',
         agency: rowData[1] || '',
         area: parseFloat(rowData[2]) || 0,
         price: parseFloat(rowData[3]) || 0,
@@ -144,9 +144,9 @@ function syncAllData() {
       };
       
       // Skip empty rows
-      if (!payload.apartment_id) continue;
+      if (!payload.id) continue;
       
-      console.log(`Syncing apartment ${payload.apartment_id}...`);
+      console.log(`Syncing apartment ${payload.id}...`);
       
       const response = UrlFetchApp.fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -156,9 +156,9 @@ function syncAllData() {
       });
       
       if (response.getResponseCode() >= 200 && response.getResponseCode() < 300) {
-        console.log(`✅ Synced ${payload.MaCan}`);
+        console.log(`✅ Synced ${payload.id}`);
       } else {
-        console.log(`❌ Failed to sync ${payload.MaCan}: ${response.getContentText()}`);
+        console.log(`❌ Failed to sync ${payload.id}: ${response.getContentText()}`);
       }
       
       // Add a small delay to avoid overwhelming the server

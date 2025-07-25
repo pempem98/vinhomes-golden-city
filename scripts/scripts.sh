@@ -31,14 +31,16 @@ print_usage() {
     echo -e "${YELLOW}Usage: ./scripts.sh [command]${NC}"
     echo ""
     echo "Commands:"
-    echo -e "  ${GREEN}init${NC}        Initialize database with sample data"
+    echo -e "  ${GREEN}init${NC}        Initialize database with sample data (removes existing)"
+    echo -e "  ${GREEN}init-safe${NC}   Initialize database safely (keeps existing data)"
     echo -e "  ${GREEN}simulate${NC}     Start live updates simulation"
     echo -e "  ${GREEN}clean${NC}       Clean database (remove all data)"
     echo -e "  ${GREEN}install${NC}     Install dependencies"
     echo -e "  ${GREEN}help${NC}        Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./scripts.sh init      # Initialize database"
+    echo "  ./scripts.sh init      # Initialize database (destructive)"
+    echo "  ./scripts.sh init-safe # Initialize database (safe mode)"
     echo "  ./scripts.sh simulate  # Start simulation"
 }
 
@@ -120,10 +122,28 @@ install_dependencies() {
     echo -e "${CHECK} ${GREEN}Dependencies installed successfully!${NC}"
 }
 
+init_database_safe() {
+    print_header
+    echo -e "${DATABASE} ${BLUE}Safe Database Initialization${NC}"
+    echo ""
+    
+    check_node
+    check_dependencies
+    
+    echo -e "${YELLOW}Starting safe database initialization (non-destructive)...${NC}"
+    node init-database-safe.js
+    
+    echo ""
+    echo -e "${CHECK} ${GREEN}Safe database initialization complete!${NC}"
+}
+
 # Main script logic
 case "${1:-help}" in
     "init")
         init_database
+        ;;
+    "init-safe")
+        init_database_safe
         ;;
     "simulate")
         simulate_updates

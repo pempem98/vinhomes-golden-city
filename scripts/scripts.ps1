@@ -23,14 +23,16 @@ function Print-Usage {
     Write-ColorOutput "Yellow" "Usage: .\scripts.ps1 [command]"
     Write-Output ""
     Write-Output "Commands:"
-    Write-ColorOutput "Green" "  init        Initialize database with sample data"
-    Write-ColorOutput "Green" "  simulate     Start live updates simulation"
+    Write-ColorOutput "Green" "  init        Initialize database with sample data (removes existing)"
+    Write-ColorOutput "Green" "  init-safe   Initialize database safely (keeps existing data)"
+    Write-ColorOutput "Green" "  simulate    Start live updates simulation"
     Write-ColorOutput "Green" "  clean       Clean database (remove all data)"
     Write-ColorOutput "Green" "  install     Install dependencies"
     Write-ColorOutput "Green" "  help        Show this help message"
     Write-Output ""
     Write-Output "Examples:"
-    Write-Output "  .\scripts.ps1 init      # Initialize database"
+    Write-Output "  .\scripts.ps1 init      # Initialize database (destructive)"
+    Write-Output "  .\scripts.ps1 init-safe # Initialize database (safe mode)"
     Write-Output "  .\scripts.ps1 simulate  # Start simulation"
 }
 
@@ -125,10 +127,31 @@ function Install-Dependencies {
     Write-ColorOutput "Green" "✅ Dependencies installed successfully!"
 }
 
+function Initialize-Database-Safe {
+    Print-Header
+    Write-ColorOutput "Blue" "🔄 Safe Database Initialization"
+    Write-Output ""
+    
+    if (-Not (Check-Node)) {
+        exit 1
+    }
+    
+    Check-Dependencies
+    
+    Write-ColorOutput "Yellow" "Starting safe database initialization (non-destructive)..."
+    node init-database-safe.js
+    
+    Write-Output ""
+    Write-ColorOutput "Green" "✅ Safe database initialization complete!"
+}
+
 # Main script logic
 switch ($Command.ToLower()) {
     "init" {
         Initialize-Database
+    }
+    "init-safe" {
+        Initialize-Database-Safe
     }
     "simulate" {
         Start-Simulation
