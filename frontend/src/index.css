@@ -244,64 +244,610 @@ body {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Responsive design for 3-panel layout */
-@media (max-width: 1200px) {
-  .left-banner, .right-banner {
-    width: 15%;
+/* View Toggle Buttons */
+.view-toggle {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: flex-end;
+}
+
+.view-toggle-btn {
+  padding: 8px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.view-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.view-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+/* Apartment Grid Styles */
+.apartment-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.grid-cell {
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid transparent;
+}
+
+.grid-cell:hover {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Empty Grid Cells */
+.grid-cell-empty {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  cursor: default;
+}
+
+.grid-cell-empty:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Grid Cell Content Styling */
+.cell-id {
+  font-weight: bold;
+  margin-bottom: 2px;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.cell-agency {
+  opacity: 0.8;
+  margin-bottom: 2px;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.cell-price {
+  font-weight: 600;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+/* Grid Cell Status Colors - Crypto/Stock Heatmap Style */
+.grid-cell-sold {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border-color: #ef4444;
+  order: -1; /* Push sold items to the beginning */
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  position: relative;
+}
+
+.grid-cell-sold::before {
+  content: "SOLD";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.grid-cell-sold:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #f87171;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.5);
+}
+
+.grid-cell-locked {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #1f2937;
+  border-color: #fbbf24;
+  position: relative;
+}
+
+.grid-cell-locked::before {
+  content: "LOCK";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: bold;
+  color: white;
+  opacity: 0.9;
+}
+
+.grid-cell-locked:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-color: #fcd34d;
+}
+
+.grid-cell-available {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-color: #34d399;
+}
+
+.grid-cell-available:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  border-color: #6ee7b7;
+}
+
+.grid-cell-default {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  border-color: #9ca3af;
+}
+
+.grid-cell-default:hover {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  border-color: #d1d5db;
+}
+
+/* Animation for newly updated cells */
+.grid-cell.newly-updated {
+  animation: pulseGlow 2s ease-in-out;
+  border-color: #fbbf24;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1);
   }
-  .main-content {
-    width: 70%;
+  25% {
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.6);
+    transform: scale(1.05);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(251, 191, 36, 0.8);
+    transform: scale(1.08);
+  }
+  75% {
+    box-shadow: 0 4px 20px rgba(251, 191, 36, 0.6);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1);
+  }
+}
+
+/* Big Sale Banner Notification */
+.big-sale-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: linear-gradient(90deg, #ff1744, #ff6b00, #ffd600, #00e676, #2196f3, #9c27b0, #ff1744);
+  background-size: 400% 100%;
+  animation: rainbowBanner 3s linear infinite;
+  padding: 12px 0;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.big-sale-banner-content {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.big-sale-marquee {
+  display: inline-block;
+  animation: marqueeScroll 20s linear infinite;
+  padding-left: 100%;
+  white-space: nowrap;
+}
+
+.big-sale-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 0 40px;
+  white-space: nowrap;
+}
+
+.big-sale-text-level-1 {
+  font-size: 1.1rem;
+  text-shadow: 2px 2px 4px rgba(205, 127, 50, 0.8);
+}
+
+.big-sale-text-level-2 {
+  font-size: 1.3rem;
+  text-shadow: 2px 2px 4px rgba(192, 192, 192, 0.8);
+}
+
+.big-sale-text-level-3 {
+  font-size: 1.5rem;
+  text-shadow: 3px 3px 6px rgba(255, 215, 0, 0.9);
+  animation: textGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes rainbowBanner {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 400% 0%; }
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes textGlow {
+  from {
+    text-shadow: 3px 3px 6px rgba(255, 215, 0, 0.9), 0 0 10px rgba(255, 215, 0, 0.7);
+  }
+  to {
+    text-shadow: 3px 3px 6px rgba(255, 215, 0, 0.9), 0 0 20px rgba(255, 215, 0, 1);
+  }
+}
+
+/* Adjust main content padding to accommodate banner */
+.main-content {
+  width: 60%;
+  background: linear-gradient(135deg, #0f4c3a 0%, #1e7e34 30%, #0d3d2f 100%);
+  padding: 70px 20px 20px 20px; /* Increased top padding for banner */
+  position: relative;
+  box-shadow: 
+    -10px 0 30px rgba(0, 0, 0, 0.3),
+    10px 0 30px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+/* Big Sale Cell Animation - Different Levels with Overlay Support */
+.big-sale-animation-level-1 {
+  animation: bigSaleEffectLevel1 4s ease-in-out;
+  z-index: 100;
+  position: relative;
+  overflow: visible !important;
+}
+
+.big-sale-animation-level-2 {
+  animation: bigSaleEffectLevel2 5s ease-in-out;
+  z-index: 101;
+  position: relative;
+  overflow: visible !important;
+}
+
+.big-sale-animation-level-3 {
+  animation: bigSaleEffectLevel3 6s ease-in-out;
+  z-index: 102;
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Overlay for big sale animations to escape container bounds */
+.apartment-grid {
+  position: relative;
+  overflow: visible !important; /* Allow animations to escape */
+}
+
+.grid-cell {
+  position: relative;
+  overflow: visible !important; /* Allow animations to escape */
+}
+
+/* Enhanced animation effects with better scaling */
+@keyframes bigSaleEffectLevel1 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  10% {
+    transform: scale(1.2);
+    box-shadow: 0 4px 25px rgba(205, 127, 50, 0.6);
+  }
+  20% {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(205, 127, 50, 0.7);
+  }
+  30% {
+    transform: scale(1.15);
+    box-shadow: 0 8px 35px rgba(205, 127, 50, 0.6);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(205, 127, 50, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes bigSaleEffectLevel2 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  10% {
+    transform: scale(1.3);
+    box-shadow: 0 6px 30px rgba(192, 192, 192, 0.7);
+  }
+  20% {
+    transform: scale(1.2);
+    box-shadow: 0 8px 35px rgba(192, 192, 192, 0.8);
+  }
+  30% {
+    transform: scale(1.25);
+    box-shadow: 0 10px 40px rgba(192, 192, 192, 0.7);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(192, 192, 192, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes bigSaleEffectLevel3 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  10% {
+    transform: scale(1.4);
+    box-shadow: 0 8px 40px rgba(255, 215, 0, 0.8);
+  }
+  20% {
+    transform: scale(1.3);
+    box-shadow: 0 12px 50px rgba(255, 215, 0, 0.9);
+  }
+  30% {
+    transform: scale(1.35);
+    box-shadow: 0 15px 60px rgba(255, 215, 0, 0.8);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 8px 35px rgba(255, 215, 0, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Table Row Animation for list view */
+.newly-updated {
+  animation: highlightRow 2s ease-in-out;
+}
+
+@keyframes highlightRow {
+  0% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+  20% {
+    background-color: rgba(255, 235, 59, 0.3);
+    transform: scale(1.02);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Big Sale Animation for Table Rows - Different Levels */
+.apartment-table tr.big-sale-animation-level-1 {
+  animation: bigSaleRowEffectLevel1 4s ease-in-out;
+  z-index: 100;
+  position: relative;
+}
+
+.apartment-table tr.big-sale-animation-level-2 {
+  animation: bigSaleRowEffectLevel2 5s ease-in-out;
+  z-index: 101;
+  position: relative;
+}
+
+.apartment-table tr.big-sale-animation-level-3 {
+  animation: bigSaleRowEffectLevel3 6s ease-in-out;
+  z-index: 102;
+  position: relative;
+}
+
+@keyframes bigSaleRowEffectLevel1 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  15% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(205, 127, 50, 0.7);
+  }
+  30% {
+    transform: scale(1.04);
+    box-shadow: 0 8px 25px rgba(205, 127, 50, 0.9);
+  }
+  45% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(205, 127, 50, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes bigSaleRowEffectLevel2 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  15% {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(192, 192, 192, 0.8);
+  }
+  30% {
+    transform: scale(1.06);
+    box-shadow: 0 10px 30px rgba(192, 192, 192, 1);
+  }
+  45% {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px rgba(192, 192, 192, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes bigSaleRowEffectLevel3 {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  15% {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.8);
+  }
+  30% {
+    transform: scale(1.08);
+    box-shadow: 0 12px 35px rgba(255, 215, 0, 1);
+  }
+  45% {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Responsive Grid */
+@media (max-width: 1200px) {
+  .apartment-grid {
+    gap: 6px;
+  }
+  
+  .grid-cell {
+    min-width: 60px !important;
+    min-height: 60px !important;
+  }
+  
+  .cell-id {
+    font-size: 0.8rem;
+  }
+  
+  .cell-agency {
+    font-size: 0.6rem;
+  }
+  
+  .cell-price {
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 768px) {
-  .app-container {
-    flex-direction: column;
+  .apartment-grid {
+    gap: 4px;
   }
   
-  .left-banner, .right-banner {
-    width: 100%;
-    height: 80px;
+  .grid-cell {
+    min-width: 50px !important;
+    min-height: 50px !important;
   }
   
-  .main-content {
-    width: 100%;
-    padding: 15px;
+  .cell-id {
+    font-size: 0.7rem;
   }
   
-  .dashboard-title {
-    font-size: 2rem;
+  .cell-agency {
+    font-size: 0.5rem;
   }
   
-  .apartment-table-container {
-    padding: 15px;
+  .cell-price {
+    font-size: 0.6rem;
   }
   
-  .apartment-table {
+  /* Mobile Responsive for Notifications */
+  .big-sale-notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .big-sale-notification {
+    font-size: 0.85rem;
+    padding: 10px 12px;
+  }
+  
+  .big-sale-notification-level-2 {
     font-size: 0.9rem;
+    padding: 12px 14px;
   }
   
-  .apartment-table th,
-  .apartment-table td {
-    padding: 8px 6px;
+  .big-sale-notification-level-3 {
+    font-size: 0.95rem;
+    padding: 14px 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .left-banner, .right-banner {
-    height: 60px;
-  }
-  
-  .apartment-table {
+  .big-sale-notification {
     font-size: 0.8rem;
+    padding: 8px 10px;
   }
   
-  .dashboard-title {
-    font-size: 1.5rem;
-  }
-  
-  .dashboard-subtitle {
-    font-size: 1rem;
+  .notification-text {
+    line-height: 1.3;
   }
 }
 
