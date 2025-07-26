@@ -7,7 +7,14 @@ const ApartmentTable = ({ apartments }) => {
   const [animatingRows, setAnimatingRows] = useState(new Set());
   const [previousApartments, setPreviousApartments] = useState([]);
   const [bigSaleNotifications, setBigSaleNotifications] = useState([]);
+  const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
   const [superAnimatingCells, setSuperAnimatingCells] = useState(new Set());
+  const [recentlySoldApartments, setRecentlySoldApartments] = useState(new Set());
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
+  
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState('updated_at'); // Default sort by Last Updated
+  const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc' - newest first
   
   const BIG_SALE_THRESHOLDS = {
     LEVEL_1: 7.5,  // Bronze level
@@ -16,6 +23,16 @@ const ApartmentTable = ({ apartments }) => {
   };
 
   const MAX_NOTIFICATIONS = 3; // Maximum notifications shown at once
+
+  // Handle window resize to detect mobile
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (apartments.length > 0) {
@@ -44,17 +61,17 @@ const ApartmentTable = ({ apartments }) => {
           // Create enhanced animation data with levels
           const enhancedBigSales = bigSales.map(apt => {
             let level = 1;
-            let levelName = 'Bronze';
-            let emoji = '🥉';
+            let levelName = 'BigTransaction';
+            let emoji = '💰';
             
             if (apt.price >= BIG_SALE_THRESHOLDS.LEVEL_3) {
               level = 3;
-              levelName = 'Gold';
-              emoji = '🥇';
+              levelName = 'PremiumDeal';
+              emoji = '🏆';
             } else if (apt.price >= BIG_SALE_THRESHOLDS.LEVEL_2) {
               level = 2;
-              levelName = 'Silver';
-              emoji = '🥈';
+              levelName = 'ExcellentSale';
+              emoji = '⭐';
             }
             
             return { ...apt, level, levelName, emoji };
@@ -89,15 +106,46 @@ const ApartmentTable = ({ apartments }) => {
             }, notification.delay);
           });
 
-          // Auto-remove notifications based on level (they fade out via CSS)
+          // Auto-remove notifications after longer duration to allow queue rotation
           notifications.forEach(notification => {
-            const duration = 10000 + (notification.level * 2000); // 10-16 seconds
+            const duration = 20000 + (notification.level * 5000); // 20-35 seconds for proper queue rotation
             setTimeout(() => {
-              setBigSaleNotifications(prev => 
-                prev.filter(notif => notif.id !== notification.id)
-              );
+              setBigSaleNotifications(prev => {
+                const filtered = prev.filter(notif => notif.id !== notification.id);
+                // Reset index if needed
+                if (filtered.length > 0) {
+                  setCurrentNotificationIndex(prevIndex => 
+                    prevIndex >= filtered.length ? 0 : prevIndex
+                  );
+                } else {
+                  setCurrentNotificationIndex(0);
+                }
+                return filtered;
+              });
             }, duration + notification.delay);
           });
+        }
+
+        // Track all apartments that just became sold (for 10s animation)
+        const newlySold = newlyUpdated.filter(apartment => {
+          const previous = previousApartments.find(p => p.id === apartment.id);
+          return apartment.status === 'Đã bán' && previous?.status !== 'Đã bán';
+        });
+
+        if (newlySold.length > 0) {
+          // Add to recently sold set
+          const newRecentlySold = new Set(recentlySoldApartments);
+          newlySold.forEach(apt => newRecentlySold.add(apt.id));
+          setRecentlySoldApartments(newRecentlySold);
+
+          // Remove from recently sold after 10 seconds
+          setTimeout(() => {
+            setRecentlySoldApartments(prev => {
+              const updated = new Set(prev);
+              newlySold.forEach(apt => updated.delete(apt.id));
+              return updated;
+            });
+          }, 10000); // 10 seconds
         }
 
         // Add simple highlight to newly updated rows
@@ -114,12 +162,25 @@ const ApartmentTable = ({ apartments }) => {
     setPreviousApartments([...apartments]);
   }, [apartments]);
 
+  // Notification queue rotation effect
+  useEffect(() => {
+    if (bigSaleNotifications.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentNotificationIndex(prev => 
+          (prev + 1) % bigSaleNotifications.length
+        );
+      }, 4000); // Change notification every 4 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [bigSaleNotifications.length]);
+
   const getStatusClassName = (status) => {
     const normalizedStatus = (status || '').toString().trim();
     
     if (normalizedStatus === 'Đã bán') return 'status-sold';
-    if (normalizedStatus === 'Đang Lock') return 'status-locked';
-    if (normalizedStatus === 'Còn trống') return 'status-available';
+    if (normalizedStatus === 'Đang lock') return 'status-locked';
+    if (normalizedStatus === 'Sẵn sàng') return 'status-available';
     
     return '';
   };
@@ -132,6 +193,121 @@ const ApartmentTable = ({ apartments }) => {
     return formatters.area(area);
   };
 
+  // Format time for mobile - only show time, not date
+  const formatTimeForMobile = (dateString) => {
+    if (!dateString) return t('format.noValue');
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('vi-VN', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  };
+
+  // Handle column sorting - disabled on mobile
+  const handleSort = (column) => {
+    if (isMobile) return; // Disable sorting on mobile
+    
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New column, default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Sort apartments based on current sort settings
+  const getSortedApartments = () => {
+    const sorted = [...apartments].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortColumn) {
+        case 'id':
+          // Extract numeric part from apartment ID for proper sorting
+          const getNumericId = (id) => {
+            const match = id.toString().match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+          };
+          aValue = getNumericId(a.id);
+          bValue = getNumericId(b.id);
+          break;
+        case 'agency':
+          aValue = (a.agency || '').toString().toLowerCase();
+          bValue = (b.agency || '').toString().toLowerCase();
+          break;
+        case 'area':
+          aValue = typeof a.area === 'number' ? a.area : 0;
+          bValue = typeof b.area === 'number' ? b.area : 0;
+          break;
+        case 'price':
+          aValue = typeof a.price === 'number' ? a.price : 0;
+          bValue = typeof b.price === 'number' ? b.price : 0;
+          break;
+        case 'status':
+          aValue = (a.status || '').toString().toLowerCase();
+          bValue = (b.status || '').toString().toLowerCase();
+          break;
+        case 'updated_at':
+          aValue = new Date(a.updated_at || 0);
+          bValue = new Date(b.updated_at || 0);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  };
+
+  // Get sort icon for column headers - hidden on mobile
+  const getSortIcon = (column) => {
+    if (isMobile) return ''; // No sort icons on mobile
+    
+    if (sortColumn !== column) {
+      // Unsorted icon - both triangles dim
+      return (
+        <svg width="1em" height="1em" viewBox="0 0 24 24" style={{ marginLeft: '4px', fontSize: '1.2em', verticalAlign: 'middle' }}>
+          <path d="M7 10l5-5 5 5H7z" fill="currentColor" opacity="0.3"/>
+          <path d="M7 14l5 5 5-5H7z" fill="currentColor" opacity="0.3"/>
+        </svg>
+      );
+    }
+    
+    if (sortDirection === 'asc') {
+      // Ascending icon - top triangle bright, bottom dim
+      return (
+        <svg width="1em" height="1em" viewBox="0 0 24 24" style={{ marginLeft: '4px', fontSize: '1.2em', verticalAlign: 'middle' }}>
+          <path d="M7 10l5-5 5 5H7z" fill="currentColor" opacity="1"/>
+          <path d="M7 14l5 5 5-5H7z" fill="currentColor" opacity="0.3"/>
+        </svg>
+      );
+    } else {
+      // Descending icon - bottom triangle bright, top dim
+      return (
+        <svg width="1em" height="1em" viewBox="0 0 24 24" style={{ marginLeft: '4px', fontSize: '1.2em', verticalAlign: 'middle' }}>
+          <path d="M7 10l5-5 5 5H7z" fill="currentColor" opacity="0.3"/>
+          <path d="M7 14l5 5 5-5H7z" fill="currentColor" opacity="1"/>
+        </svg>
+      );
+    }
+  };
+
+  // Calculate apartment statistics
+  const getApartmentStats = () => {
+    const total = 238; // Fixed total
+    const sold = apartments.filter(apt => apt.status === 'Đã bán').length;
+    const locked = apartments.filter(apt => apt.status === 'Đang lock').length;
+    const available = apartments.filter(apt => apt.status === 'Sẵn sàng').length;
+    
+    return { total, sold, locked, available };
+  };
+
   if (!apartments || apartments.length === 0) {
     return (
       <div className="loading-container">
@@ -142,41 +318,21 @@ const ApartmentTable = ({ apartments }) => {
 
   return (
     <div>
-      {/* Big Sale Banner Notification */}
+      {/* Sales Notification Banner - Between header and content */}
       {bigSaleNotifications.length > 0 && (
-        <div className="big-sale-banner">
-          <div className="big-sale-banner-content">
-            <div className="big-sale-marquee">
-              {bigSaleNotifications.map((notification) => (
-                <span 
-                  key={notification.id} 
-                  className={`big-sale-text big-sale-text-level-${notification.level}`}
-                >
-                  {notification.message}
-                </span>
-              )).reduce((prev, curr) => [prev, ' • ', curr])}
+        <div 
+          className="sale-notification-banner"
+          data-queue-info={bigSaleNotifications.length > 1 ? `${currentNotificationIndex + 1}/${bigSaleNotifications.length}` : ''}
+        >
+          <div className="sale-notification-content">
+            <div className="sale-notification-marquee">
+              <span className="sale-notification-text">
+                {bigSaleNotifications[currentNotificationIndex]?.message || t('notifications.bigSale.defaultMessage')}
+              </span>
             </div>
           </div>
         </div>
       )}
-
-      {/* View Toggle */}
-      <div className="view-toggle">
-        <button
-          className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-          onClick={() => setViewMode('list')}
-          title={t('tooltips.switchToList')}
-        >
-          📋 {t('viewModes.list')}
-        </button>
-        <button
-          className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-          onClick={() => setViewMode('grid')}
-          title={t('tooltips.switchToGrid')}
-        >
-          ⬜ {t('viewModes.grid')}
-        </button>
-      </div>
 
       {/* Conditional Rendering based on view mode */}
       {viewMode === 'grid' ? (
@@ -184,28 +340,74 @@ const ApartmentTable = ({ apartments }) => {
           apartments={apartments} 
           animatingCells={animatingRows}
           superAnimatingCells={superAnimatingCells}
+          recentlySoldApartments={recentlySoldApartments}
+          bigSaleNotifications={bigSaleNotifications}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
         />
       ) : (
-        <>
-          <div style={{ marginBottom: '15px', textAlign: 'right', opacity: 0.8 }}>
-            {t('common.total')} {t('common.apartments')}: {apartments.length}
+        <div className="table-scroll-wrapper">
+          {/* Table Stats and View Toggle */}
+          <div className="table-controls">
+            <div className="table-stats">
+              {(() => {
+                const stats = getApartmentStats();
+                return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
+              })()}
+            </div>
+            
+            <div className="view-toggle">
+              <button
+                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                title={t('tooltips.switchToList')}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                </svg>
+                {t('viewModes.list')}
+              </button>
+              <button
+                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                title={t('tooltips.switchToGrid')}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z"/>
+                </svg>
+                {t('viewModes.grid')}
+              </button>
+            </div>
           </div>
           
           <table className="apartment-table">
             <thead>
               <tr>
-                <th>{t('table.headers.apartmentId')}</th>
-                <th>{t('table.headers.agency')}</th>
-                <th>{t('table.headers.area')}</th>
-                <th>{t('table.headers.price')}</th>
-                <th>{t('table.headers.status')}</th>
-                <th>{t('table.headers.lastUpdated')}</th>
+                <th onClick={() => handleSort('agency')}>
+                  {t('table.headers.agency')} {getSortIcon('agency')}
+                </th>
+                <th onClick={() => handleSort('id')}>
+                  {t('table.headers.apartmentId')} {getSortIcon('id')}
+                </th>
+                <th onClick={() => handleSort('area')}>
+                  {t('table.headers.area')} {getSortIcon('area')}
+                </th>
+                <th onClick={() => handleSort('price')}>
+                  {t('table.headers.price')} {getSortIcon('price')}
+                </th>
+                <th onClick={() => handleSort('status')}>
+                  {t('table.headers.status')} {getSortIcon('status')}
+                </th>
+                <th onClick={() => handleSort('updated_at')}>
+                  {t('table.headers.lastUpdated')} {getSortIcon('updated_at')}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {apartments.map((apartment, index) => {
+              {getSortedApartments().map((apartment, index) => {
                 const statusClass = getStatusClassName(apartment.status);
                 const isAnimating = animatingRows.has(apartment.id);
+                const isRecentlySold = recentlySoldApartments.has(apartment.id);
                 
                 // Find if this apartment has super animation and its level
                 let superAnimationClass = '';
@@ -219,12 +421,16 @@ const ApartmentTable = ({ apartments }) => {
                   }
                 }
                 
-                const rowClass = `${statusClass} ${isAnimating ? 'newly-updated' : ''} ${superAnimationClass}`.trim();
+                const recentlySoldClass = isRecentlySold ? 'recently-sold-animation' : '';
+                const rowClass = `${statusClass} ${isAnimating ? 'newly-updated' : ''} ${superAnimationClass} ${recentlySoldClass}`.trim();
                 
                 return (
-                  <tr key={apartment.id} className={rowClass}>
-                    <td style={{ fontWeight: 'bold' }}>{apartment.id}</td>
+                  <tr 
+                    key={apartment.id} 
+                    className={rowClass}
+                  >
                     <td>{apartment.agency || t('format.noValue')}</td>
+                    <td style={{ fontWeight: 'bold' }}>{apartment.id}</td>
                     <td>{formatArea(apartment.area)}</td>
                     <td style={{ fontWeight: 'bold' }}>{formatPrice(apartment.price)}</td>
                     <td>
@@ -238,17 +444,18 @@ const ApartmentTable = ({ apartments }) => {
                       </span>
                     </td>
                     <td style={{ fontSize: '0.85rem', opacity: 0.8 }}>
-                      {apartment.updated_at ? 
-                        new Date(apartment.updated_at).toLocaleString('vi-VN') : 
-                        t('format.noValue')
-                      }
+                      {apartment.updated_at ? (
+                        isMobile ? 
+                          formatTimeForMobile(apartment.updated_at) :
+                          new Date(apartment.updated_at).toLocaleString('vi-VN')
+                      ) : t('format.noValue')}
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </>
+        </div>
       )}
     </div>
   );

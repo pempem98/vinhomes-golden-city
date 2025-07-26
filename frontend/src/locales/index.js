@@ -20,8 +20,12 @@ export const getCurrentLocale = () => currentLocale;
 export const setLocale = (locale) => {
   if (locales[locale]) {
     currentLocale = locale;
-    // Save to localStorage
-    localStorage.setItem('apartment-dashboard-locale', locale);
+    // Save to localStorage safely
+    try {
+      localStorage.setItem('apartment-dashboard-locale', locale);
+    } catch (error) {
+      console.warn('Error saving locale to localStorage:', error);
+    }
     return true;
   }
   return false;
@@ -87,8 +91,8 @@ export const formatters = {
     const normalizedStatus = (status || '').toString().trim();
     
     if (normalizedStatus === 'Đã bán') return t('status.sold');
-    if (normalizedStatus === 'Đang Lock') return t('status.locked');
-    if (normalizedStatus === 'Còn trống') return t('status.available');
+    if (normalizedStatus === 'Đang lock') return t('status.locked');
+    if (normalizedStatus === 'Sẵn sàng') return t('status.available');
     
     return t('status.unknown');
   },
@@ -97,16 +101,20 @@ export const formatters = {
     const normalizedStatus = (status || '').toString().trim();
     
     if (normalizedStatus === 'Đã bán') return t('statusLabels.sold');
-    if (normalizedStatus === 'Đang Lock') return t('statusLabels.locked');
+    if (normalizedStatus === 'Đang lock') return t('statusLabels.locked');
     
     return '';
   }
 };
 
 // Initialize locale from localStorage on import
-const savedLocale = localStorage.getItem('apartment-dashboard-locale');
-if (savedLocale && locales[savedLocale]) {
-  currentLocale = savedLocale;
+try {
+  const savedLocale = localStorage.getItem('apartment-dashboard-locale');
+  if (savedLocale && savedLocale !== 'undefined' && savedLocale !== 'null' && locales[savedLocale]) {
+    currentLocale = savedLocale;
+  }
+} catch (error) {
+  console.warn('Error reading locale from localStorage:', error);
 }
 
 export default {

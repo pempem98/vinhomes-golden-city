@@ -10,7 +10,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000", // React frontend URL
+    origin: [
+      "http://localhost:3000", 
+      "http://192.168.31.205:3000",
+      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
+      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
+      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000
+    ],
     methods: ["GET", "POST"]
   }
 });
@@ -18,7 +24,16 @@ const io = socketIo(server, {
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://192.168.31.205:3000",
+    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
+    /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
+    /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000
+  ],
+  credentials: true
+}));
 app.use(express.json({ charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
 
@@ -35,6 +50,7 @@ db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS ${DATABASE.TABLE_NAME} (
     ${DATABASE.COLUMNS.ID} TEXT PRIMARY KEY,
     ${DATABASE.COLUMNS.AGENCY} TEXT,
+    ${DATABASE.COLUMNS.AGENCY_SHORT} TEXT,
     ${DATABASE.COLUMNS.AREA} REAL,
     ${DATABASE.COLUMNS.PRICE} REAL,
     ${DATABASE.COLUMNS.STATUS} TEXT,
@@ -132,7 +148,8 @@ process.on('SIGINT', () => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Server accessible from any IP address on port ${PORT}`);
   console.log(`WebSocket server ready for connections`);
 });

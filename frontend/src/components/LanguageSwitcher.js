@@ -21,14 +21,14 @@ const LanguageSwitcher = ({ onLanguageChange }) => {
         onClick={() => handleLanguageChange('vi')}
         title="Tiếng Việt"
       >
-        🇻🇳 VI
+        🇻🇳
       </button>
       <button
         className={`lang-btn ${currentLocale === 'en' ? 'active' : ''}`}
         onClick={() => handleLanguageChange('en')}
         title="English"
       >
-        🇺🇸 EN
+        🇺🇸
       </button>
     </div>
   );

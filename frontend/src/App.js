@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import ApartmentTable from './components/ApartmentTable';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import CurrentTime from './components/CurrentTime';
 import { SOCKET_EVENTS, APP_CONFIG } from './constants';
 import { t } from './locales';
 
@@ -62,10 +63,11 @@ function App() {
       
       {/* Main Content */}
       <div className="main-content">
-        <LanguageSwitcher />
-        
-        <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? `🟢 ${t('common.status.connected')}` : `🔴 ${t('common.status.disconnected')}`}
+        <div className="top-status-bar">
+          <div className="connection-status">
+            <CurrentTime />
+          </div>
+          <LanguageSwitcher />
         </div>
         
         <header className="dashboard-header">

@@ -20,9 +20,9 @@ export const vi = {
 
   // Status
   status: {
-    available: 'Còn trống',
+    available: 'Sẵn sàng',
     sold: 'Đã bán', 
-    locked: 'Đang Lock',
+    locked: 'Đang lock',
     unknown: 'Không xác định'
   },
 
@@ -34,8 +34,8 @@ export const vi = {
 
   // View modes
   viewModes: {
-    list: 'Danh sách',
-    grid: 'Lưới'
+    list: 'List',
+    grid: 'Grid'
   },
 
   // Units
@@ -48,17 +48,18 @@ export const vi = {
   // Notifications
   notifications: {
     bigSale: {
-      bronze: 'BRONZE SALE',
-      silver: 'SILVER SALE', 
-      gold: 'GOLD SALE',
-      message: '{level}! Căn hộ {id} đã bán với giá {price}B {currency}!',
+      bronze: 'GIAO DỊCH LỚN',
+      silver: 'GIAO DỊCH XUẤT SẮC', 
+      gold: 'GIAO DỊCH ĐẶC BIỆT',
+      message: '🔥 {level}! Căn hộ {id} vừa được bán thành công với giá {price}B {currency}! 🎉',
       levels: {
-        1: 'BRONZE',
-        2: 'SILVER',
-        3: 'GOLD'
+        1: 'GIAO DỊCH LỚN',
+        2: 'GIAO DỊCH XUẤT SẮC',
+        3: 'GIAO DỊCH ĐẶC BIỆT'
       }
     },
-    worldChannel: 'Kênh thế giới'
+    saleBanner: 'Thông báo bán hàng',
+    salesAlert: 'Cảnh báo giao dịch lớn'
   },
 
   // Table headers
@@ -70,21 +71,30 @@ export const vi = {
       price: 'Giá',
       status: 'Trạng thái',
       lastUpdated: 'Cập nhật lần cuối'
-    }
+    },
+    rowsPerPage: 'Hàng hiển thị'
+  },
+
+  // Stats
+  stats: {
+    total: 'Tổng số',
+    sold: 'Đã bán',
+    locked: 'Đang lock',
+    available: 'Sẵn sàng'
   },
 
   // Dashboard
   dashboard: {
-    title: 'Bảng Điều Khiển Căn Hộ',
-    subtitle: 'Theo dõi trạng thái căn hộ theo thời gian thực',
+    title: 'SỰ KIỆN BÁN HÀNG - KHU MẶT TRỜI',
+    subtitle: 'Dự án bất động sản Vinhomes Dương Kinh',
     realtime: 'Thời gian thực'
   },
 
   // Tooltips
   tooltips: {
     apartmentInfo: '{id} - {agency} - Diện tích: {area}m² - {price} - {status}',
-    switchToList: 'Chuyển sang chế độ danh sách',
-    switchToGrid: 'Chuyển sang chế độ lưới'
+    switchToList: 'Chuyển sang chế độ List',
+    switchToGrid: 'Chuyển sang chế độ Grid'
   },
 
   // Formatting
@@ -92,5 +102,11 @@ export const vi = {
     price: '{value}tỷ',
     area: '{value} m²',
     noValue: 'N/A'
+  },
+
+  // Grid controls
+  grid: {
+    columnsPerRow: 'Cột/hàng',
+    columns: 'cột'
   }
 };

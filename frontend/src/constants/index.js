@@ -1,14 +1,14 @@
 // Application constants
 export const STATUS_TYPES = {
   SOLD: 'Đã bán',
-  LOCKED: 'Đang Lock',
-  AVAILABLE: 'Còn trống'
+  LOCKED: 'Đang lock',
+  AVAILABLE: 'Sẵn sàng'
 };
 
 export const STATUS_CLASSES = {
   'Đã bán': 'status-sold',
-  'Đang Lock': 'status-locked',
-  'Còn trống': 'status-available',
+  'Đang lock': 'status-locked',
+  'Sẵn sàng': 'status-available',
   '-': 'status-available'
 };
 
@@ -25,7 +25,10 @@ export const SOCKET_EVENTS = {
 
 export const APP_CONFIG = {
   ANIMATION_DURATION: 600,
-  DEFAULT_BACKEND_URL: 'http://localhost:5000'
+  DEFAULT_BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 
+                       (window.location.hostname === 'localhost' 
+                         ? 'http://localhost:5000' 
+                         : `http://${window.location.hostname}:5000`)
 };
 
 export const FIELD_NAMES = {

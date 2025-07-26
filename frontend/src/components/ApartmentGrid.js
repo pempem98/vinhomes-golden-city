@@ -1,17 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { t, formatters } from '../locales';
 
-const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingCells = new Set() }) => {
+const ApartmentGrid = ({ 
+  apartments, 
+  animatingCells = new Set(), 
+  superAnimatingCells = new Set(), 
+  recentlySoldApartments = new Set(),
+  bigSaleNotifications = [],
+  viewMode,
+  setViewMode
+}) => {
   const [previousApartments, setPreviousApartments] = useState([]);
   const [visibleApartments, setVisibleApartments] = useState(apartments);
-  const [containerWidth, setContainerWidth] = useState(800);
+  const [containerWidth, setContainerWidth] = useState(1200); // Better default width
+  
+  // Load columns from localStorage or default to 8, but adjust for mobile with max 10
+  const [columnsPerRow, setColumnsPerRow] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gridColumnsPerRow');
+      const defaultColumns = window.innerWidth <= 480 ? 10 : 8; // Max 10 columns on mobile
+      const loadedColumns = (saved && saved !== 'undefined' && saved !== 'null') ? parseInt(saved) : defaultColumns;
+      // Cap at 10 for mobile, 40 for desktop
+      const maxColumns = window.innerWidth <= 480 ? 10 : 40;
+      return Math.min(loadedColumns, maxColumns);
+    } catch (error) {
+      console.warn('Error reading from localStorage:', error);
+      return window.innerWidth <= 480 ? 10 : 8;
+    }
+  });
+
+  // Adjust columns for mobile on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      // Different caps for mobile vs desktop
+      const isMobile = window.innerWidth <= 480;
+      const maxColumns = isMobile ? 10 : 40;
+      
+      if (columnsPerRow > maxColumns) {
+        setColumnsPerRow(maxColumns);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [columnsPerRow]);
+
+  // Save columns to localStorage when changed
+  useEffect(() => {
+    try {
+      localStorage.setItem('gridColumnsPerRow', columnsPerRow.toString());
+    } catch (error) {
+      console.warn('Error writing to localStorage:', error);
+    }
+  }, [columnsPerRow]);
 
   // Handle container resize
   useEffect(() => {
     const handleResize = () => {
-      const gridElement = document.querySelector('.apartment-grid');
-      if (gridElement) {
-        setContainerWidth(gridElement.clientWidth);
+      // Get the parent container width instead of grid element width
+      const containerElement = document.querySelector('.apartment-table-container');
+      if (containerElement) {
+        // Different padding for mobile vs desktop
+        const isMobile = window.innerWidth <= 480;
+        const containerPadding = isMobile ? 4 : 50; // Minimal padding on mobile
+        const availableWidth = containerElement.clientWidth - containerPadding;
+        setContainerWidth(Math.max(200, availableWidth)); // Minimum width to prevent issues
       }
     };
 
@@ -35,8 +88,8 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
     const normalizedStatus = (status || '').toString().trim();
     
     if (normalizedStatus === 'Đã bán') return 'grid-cell-sold';
-    if (normalizedStatus === 'Đang Lock') return 'grid-cell-locked';
-    if (normalizedStatus === 'Còn trống') return 'grid-cell-available';
+    if (normalizedStatus === 'Đang lock') return 'grid-cell-locked';
+    if (normalizedStatus === 'Sẵn sàng') return 'grid-cell-available';
     
     return 'grid-cell-default';
   };
@@ -49,71 +102,48 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
     return formatters.agency(agency);
   };
 
-  const getCellSize = (apartment) => {
-    // Base size calculation - proportional to area
-    const baseSize = 60; // minimum size
-    let areaMultiplier = 1;
+  const getCellSize = () => {
+    // Calculate cell size based on selected columns
+    const gap = 3;
+    const availableWidth = containerWidth;
     
-    if (typeof apartment.area === 'number' && apartment.area > 0) {
-      // Direct proportional relationship: area 100 = 2x size of area 50
-      areaMultiplier = apartment.area / 50; // 50 is reference area
-      areaMultiplier = Math.max(0.8, Math.min(3, areaMultiplier)); // Clamp between 0.8x and 3x
-    }
+    const totalGaps = (columnsPerRow - 1) * gap;
+    const cellSize = Math.floor((availableWidth - totalGaps) / columnsPerRow);
     
-    const calculatedSize = Math.round(baseSize * areaMultiplier);
-    
-    // Ensure size fits within container constraints
-    const totalApartments = visibleApartments.length;
-    const minColumns = Math.max(4, Math.floor(Math.sqrt(totalApartments)));
-    const maxColumns = Math.max(minColumns, Math.floor(containerWidth / 80));
-    const maxCellSize = Math.floor((containerWidth - (maxColumns * 8)) / maxColumns);
-    
-    return Math.max(baseSize, Math.min(calculatedSize, maxCellSize, 200));
+    // No size limits - let cells scale freely
+    return Math.max(10, cellSize); // Only minimum 10px to prevent rendering issues
   };
 
   const getFontSizes = (cellSize) => {
-    // Font sizes proportional to cell size
-    const baseFontRatio = cellSize / 80; // 80px is our reference size
+    // Font sizes fully proportional to cell size - no limits, scales with cell
+    const baseFontRatio = cellSize / 70;
     
     return {
-      idFontSize: Math.max(10, Math.round(16 * baseFontRatio)), // Increased base size
-      agencyFontSize: Math.max(8, Math.round(11 * baseFontRatio)),
-      priceFontSize: Math.max(9, Math.round(13 * baseFontRatio))
+      idFontSize: Math.round(10 * baseFontRatio), // Further reduced from 12
+      agencyFontSize: Math.round(7 * baseFontRatio), // Further reduced from 8
+      priceFontSize: Math.round(9 * baseFontRatio), // Further reduced from 10
+      statusLabelFontSize: Math.max(5, Math.round(7 * baseFontRatio)) // Further reduced, minimum 5px
     };
   };
 
   const getSortedApartments = () => {
-    // Sort apartments: sold ones first, then by status, then by area (descending)
+    // Sort apartments by apartment ID (alphabetical order A-Z)
     return [...visibleApartments].sort((a, b) => {
-      // First priority: sold apartments go to top
-      const aIsSold = a.status === 'Đã bán';
-      const bIsSold = b.status === 'Đã bán';
+      // Convert IDs to string for comparison
+      const aId = a.id.toString();
+      const bId = b.id.toString();
       
-      if (aIsSold && !bIsSold) return -1;
-      if (!aIsSold && bIsSold) return 1;
-      
-      // Second priority: sort by status
-      const statusOrder = { 'Đã bán': 0, 'Đang Lock': 1, 'Còn trống': 2 };
-      const aStatusPriority = statusOrder[a.status] || 3;
-      const bStatusPriority = statusOrder[b.status] || 3;
-      
-      if (aStatusPriority !== bStatusPriority) {
-        return aStatusPriority - bStatusPriority;
-      }
-      
-      // Third priority: sort by area (larger first)
-      const aArea = typeof a.area === 'number' ? a.area : 0;
-      const bArea = typeof b.area === 'number' ? b.area : 0;
-      
-      return bArea - aArea;
+      // Use localeCompare with numeric option for proper alphanumeric sorting
+      // This handles cases like A01, A02, A10 correctly (instead of A01, A10, A02)
+      return aId.localeCompare(bId, 'en', { 
+        numeric: true,      // Handle numeric parts correctly
+        sensitivity: 'base' // Case insensitive
+      });
     });
   };
 
   const getColumnsPerRow = () => {
-    // Calculate approximate columns based on container width and average cell size
-    const averageCellSize = 90; // Approximate average cell size including gap
-    const columnsEstimate = Math.floor(containerWidth / averageCellSize);
-    return Math.max(4, Math.min(columnsEstimate, 10)); // Between 4 and 10 columns
+    return columnsPerRow; // Use state value directly
   };
 
   const getGridWithEmptyCells = () => {
@@ -137,6 +167,16 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
     return [...sortedApartments, ...emptyCells];
   };
 
+  // Calculate apartment statistics
+  const getApartmentStats = () => {
+    const total = 238; // Fixed total
+    const sold = apartments.filter(apt => apt.status === 'Đã bán').length;
+    const locked = apartments.filter(apt => apt.status === 'Đang lock').length;
+    const available = apartments.filter(apt => apt.status === 'Sẵn sàng').length;
+    
+    return { total, sold, locked, available };
+  };
+
   if (!visibleApartments || visibleApartments.length === 0) {
     return (
       <div className="loading-container">
@@ -146,17 +186,80 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: '15px', textAlign: 'right', opacity: 0.8 }}>
-        {t('common.total')} {t('common.apartments')}: {visibleApartments.length}
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'stretch',
+      width: '100%',
+      height: '100%',
+      minHeight: 'auto'
+    }}>
+      {/* Grid Controls */}
+      <div className="grid-controls">
+        <div className="grid-stats">
+          {(() => {
+            const stats = getApartmentStats();
+            return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
+          })()}
+        </div>
+        
+        <div className="grid-controls-right">
+          <div className="column-slider-container">
+            <label className="column-slider-label">
+              {t('grid.columnsPerRow', { default: 'Cột/hàng' })}:
+            </label>
+            <input
+              type="range"
+              min="4"
+              max="40"
+              value={columnsPerRow}
+              onChange={(e) => setColumnsPerRow(parseInt(e.target.value))}
+              className="column-slider"
+            />
+            <span className="column-value">{columnsPerRow}</span>
+          </div>
+          
+          <div className="view-toggle">
+            <button
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title={t('tooltips.switchToList')}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+              </svg>
+              {t('viewModes.list')}
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              title={t('tooltips.switchToGrid')}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z"/>
+              </svg>
+              {t('viewModes.grid')}
+            </button>
+          </div>
+        </div>
       </div>
       
       <div 
         className="apartment-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${getColumnsPerRow()}, ${getCellSize()}px)`,
+          gap: '3px',
+          justifyContent: 'center',
+          alignContent: 'start',
+          width: 'fit-content',
+          maxWidth: '100%',
+          margin: '0 auto',
+          paddingBottom: '20px', /* Increased padding for more bottom space */
+          // Scroll properties handled by CSS
+        }}
         ref={(el) => {
-          if (el && el.clientWidth !== containerWidth) {
-            setContainerWidth(el.clientWidth);
-          }
+          // Ref for potential future use, but don't update containerWidth here
         }}
       >
         {getGridWithEmptyCells().map((item) => {
@@ -167,8 +270,8 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
                 key={item.id}
                 className="grid-cell grid-cell-empty"
                 style={{
-                  width: '80px',
-                  height: '80px',
+                  width: `${getCellSize()}px`,
+                  height: `${getCellSize()}px`,
                   opacity: 0.1,
                   pointerEvents: 'none'
                 }}
@@ -180,6 +283,7 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
           const apartment = item;
           const statusClass = getStatusClassName(apartment.status);
           const isAnimating = animatingCells.has(apartment.id);
+          const isRecentlySold = recentlySoldApartments.has(apartment.id);
           
           // Find if this apartment has super animation and its level
           let superAnimationClass = '';
@@ -193,9 +297,13 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
             }
           }
           
-          const cellSize = getCellSize(apartment);
+          const cellSize = getCellSize();
           const fontSizes = getFontSizes(cellSize);
-          const cellClass = `grid-cell ${statusClass} ${isAnimating ? 'newly-updated' : ''} ${superAnimationClass}`.trim();
+          const recentlySoldClass = isRecentlySold ? 'recently-sold-animation' : '';
+          const cellClass = `grid-cell ${statusClass} ${isAnimating ? 'newly-updated' : ''} ${superAnimationClass} ${recentlySoldClass}`.trim();
+          
+          // Calculate status label font size based on cell size - no minimum limit
+          const statusLabelFontSize = Math.round(cellSize * 0.12); // 12% of cell size, fully proportional
           
           return (
             <div
@@ -204,6 +312,7 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
               style={{
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
+                '--status-label-font-size': `${statusLabelFontSize}px`
               }}
               data-status-label={formatters.statusLabel(apartment.status)}
               title={t('tooltips.apartmentInfo', {
@@ -224,7 +333,7 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
                 className="cell-agency"
                 style={{ fontSize: `${fontSizes.agencyFontSize}px` }}
               >
-                {formatAgency(apartment.agency)}
+                {apartment.agency_short || formatAgency(apartment.agency)}
               </div>
               <div 
                 className="cell-price"

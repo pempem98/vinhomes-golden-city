@@ -91,7 +91,7 @@ function testWebhook() {
     agency: 'Test Agency',
     area: 85.5,
     price: 6.2,
-    status: 'Đang Lock'
+    status: 'Đang lock'
   };
   
   try {

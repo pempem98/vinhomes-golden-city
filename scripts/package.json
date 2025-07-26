@@ -7,6 +7,7 @@
     "init": "node init-database.js",
     "init:safe": "node init-database-safe.js",
     "simulate": "node simulate-live-updates.js",
+    "simulate:status": "node simulate-status-changes.js",
     "clean": "node -e \"const fs = require('fs'); const path = '../backend/database.sqlite'; if (fs.existsSync(path)) { fs.unlinkSync(path); console.log('✅ Database cleaned'); } else { console.log('⚠️  No database found'); }\"",
     "install:all": "npm install",
     "test": "echo \"No tests specified\" && exit 0"

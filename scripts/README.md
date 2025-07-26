@@ -9,8 +9,9 @@ Thư mục này chứa các utility scripts để quản lý database và simula
 - **Cross-platform support** - Chạy được trên Windows, Linux, và macOS
 
 ### 2. 🎬 Live Updates Simulation  
-- **`simulate-live-updates.js`** - Mô phỏng cập nhật real-time
-- **Automatic updates** - Tự động gửi updates mỗi 3 giây trong 2 phút
+- **`simulate-live-updates.js`** - Mô phỏng cập nhật real-time với tạo căn hộ mới
+- **`simulate-status-changes.js`** - Chỉ thay đổi trạng thái căn hộ hiện có (không thêm/xóa)
+- **Automatic updates** - Tự động gửi updates trong khoảng thời gian nhất định
 
 ## 🚀 Cách sử dụng
 
@@ -61,8 +62,11 @@ npm install
 # Khởi tạo database
 npm run init
 
-# Mô phỏng live updates
+# Mô phỏng live updates (tạo căn hộ mới)
 npm run simulate
+
+# Mô phỏng thay đổi trạng thái (chỉ đổi status)
+npm run simulate:status
 
 # Xóa database
 npm run clean
@@ -109,16 +113,37 @@ CREATE TABLE apartments (
 
 4. **Mô phỏng live updates** (terminal mới)
    ```bash
-   # Windows
+   # Windows - Full simulation (adds new apartments)
    cd scripts
    .\scripts.ps1 simulate
    
-   # Linux/macOS
+   # Windows - Status changes only (no new apartments)
+   .\scripts.ps1 simulate:status
+   
+   # Linux/macOS - Full simulation
    cd scripts
    ./scripts.sh simulate
+   
+   # Linux/macOS - Status changes only  
+   ./scripts.sh simulate:status
    ```
 
-5. **Mở browser** và truy cập `http://localhost:3000` để xem dashboard real-time
+## 🔄 Simulation Types
+
+### 1. **Full Simulation** (`simulate`)
+- Tạo căn hộ mới và cập nhật trạng thái
+- Thích hợp để test với dữ liệu lớn
+- Duration: 2 phút, interval: 1 giây
+
+### 2. **Status Change Simulation** (`simulate:status`) 
+- **Chỉ thay đổi trạng thái căn hộ hiện có**
+- **Không thêm hoặc xóa căn hộ nào**
+- Thích hợp để test UI với dữ liệu ổn định
+- Duration: 2 phút, interval: 1.5 giây
+- Transition rules:
+  - `Còn trống` → `Đang Lock` (30% chance)
+  - `Đang Lock` → `Đã bán` (25%) hoặc `Còn trống` (35%)
+  - `Đã bán` → No changes (final state)
 
 ## 📁 File Structure
 

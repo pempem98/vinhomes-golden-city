@@ -15,6 +15,7 @@ const DATABASE = {
   COLUMNS: {
     ID: 'id',
     AGENCY: 'agency',
+    AGENCY_SHORT: 'agency_short',
     AREA: 'area',
     PRICE: 'price',
     STATUS: 'status',

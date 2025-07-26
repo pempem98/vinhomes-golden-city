@@ -31,17 +31,19 @@ print_usage() {
     echo -e "${YELLOW}Usage: ./scripts.sh [command]${NC}"
     echo ""
     echo "Commands:"
-    echo -e "  ${GREEN}init${NC}        Initialize database with sample data (removes existing)"
-    echo -e "  ${GREEN}init-safe${NC}   Initialize database safely (keeps existing data)"
-    echo -e "  ${GREEN}simulate${NC}     Start live updates simulation"
-    echo -e "  ${GREEN}clean${NC}       Clean database (remove all data)"
-    echo -e "  ${GREEN}install${NC}     Install dependencies"
-    echo -e "  ${GREEN}help${NC}        Show this help message"
+    echo -e "  ${GREEN}init${NC}            Initialize database with sample data (removes existing)"
+    echo -e "  ${GREEN}init-safe${NC}       Initialize database safely (keeps existing data)"
+    echo -e "  ${GREEN}simulate${NC}        Start live updates simulation (adds new apartments)"
+    echo -e "  ${GREEN}simulate:status${NC} Start status change simulation (only changes status)"
+    echo -e "  ${GREEN}clean${NC}           Clean database (remove all data)"
+    echo -e "  ${GREEN}install${NC}         Install dependencies"
+    echo -e "  ${GREEN}help${NC}            Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./scripts.sh init      # Initialize database (destructive)"
-    echo "  ./scripts.sh init-safe # Initialize database (safe mode)"
-    echo "  ./scripts.sh simulate  # Start simulation"
+    echo "  ./scripts.sh init             # Initialize database (destructive)"
+    echo "  ./scripts.sh init-safe        # Initialize database (safe mode)"
+    echo "  ./scripts.sh simulate         # Start full simulation"
+    echo "  ./scripts.sh simulate:status  # Only change apartment status"
 }
 
 check_node() {
@@ -88,6 +90,22 @@ simulate_updates() {
     echo ""
     
     node simulate-live-updates.js
+}
+
+simulate_status_changes() {
+    print_header
+    echo -e "${SIMULATE} ${BLUE}Starting Status Change Simulation${NC}"
+    echo ""
+    
+    check_node
+    check_dependencies
+    
+    echo -e "${YELLOW}Make sure the backend server is running on http://localhost:5000${NC}"
+    echo -e "${GREEN}This simulation only changes apartment status (no apartments added/removed)${NC}"
+    echo -e "${YELLOW}Press Ctrl+C to stop simulation${NC}"
+    echo ""
+    
+    node simulate-status-changes.js
 }
 
 clean_database() {
@@ -147,6 +165,9 @@ case "${1:-help}" in
         ;;
     "simulate")
         simulate_updates
+        ;;
+    "simulate:status")
+        simulate_status_changes
         ;;
     "clean")
         clean_database

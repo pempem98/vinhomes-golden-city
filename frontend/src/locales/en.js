@@ -20,7 +20,7 @@ export const en = {
 
   // Status
   status: {
-    available: 'Available',
+    available: 'Ready',
     sold: 'Sold',
     locked: 'Locked',
     unknown: 'Unknown'
@@ -48,17 +48,18 @@ export const en = {
   // Notifications
   notifications: {
     bigSale: {
-      bronze: 'BRONZE SALE',
-      silver: 'SILVER SALE',
-      gold: 'GOLD SALE', 
-      message: '{level}! Apartment {id} sold for {price}B {currency}!',
+      bronze: 'BIG TRANSACTION',
+      silver: 'EXCELLENT SALE',
+      gold: 'PREMIUM DEAL', 
+      message: '🔥 {level}! Apartment {id} just sold successfully for {price}B {currency}! 🎉',
       levels: {
-        1: 'BRONZE',
-        2: 'SILVER',
-        3: 'GOLD'
+        1: 'BIG TRANSACTION',
+        2: 'EXCELLENT SALE',
+        3: 'PREMIUM DEAL'
       }
     },
-    worldChannel: 'World Channel'
+    saleBanner: 'Sales Notification',
+    salesAlert: 'Major Transaction Alert'
   },
 
   // Table headers
@@ -70,21 +71,30 @@ export const en = {
       price: 'Price',
       status: 'Status',
       lastUpdated: 'Last Updated'
-    }
+    },
+    rowsPerPage: 'Visible rows'
+  },
+
+  // Stats
+  stats: {
+    total: 'Total',
+    sold: 'Sold',
+    locked: 'Locked',
+    available: 'Available'
   },
 
   // Dashboard
   dashboard: {
-    title: 'Real Estate Dashboard',
-    subtitle: 'Real-time apartment status monitoring',
+    title: 'SALES EVENT - SUNSHINE DISTRICT',
+    subtitle: 'Vinhomes Duong Kinh Real Estate',
     realtime: 'Real-time'
   },
 
   // Tooltips
   tooltips: {
     apartmentInfo: '{id} - {agency} - Area: {area}m² - {price} - {status}',
-    switchToList: 'Switch to list view',
-    switchToGrid: 'Switch to grid view'
+    switchToList: 'Switch to List mode',
+    switchToGrid: 'Switch to Grid mode'
   },
 
   // Formatting
@@ -92,5 +102,11 @@ export const en = {
     price: '{value}B',
     area: '{value} m²',
     noValue: 'N/A'
+  },
+
+  // Grid controls
+  grid: {
+    columnsPerRow: 'Columns/Row',
+    columns: 'columns'
   }
 };

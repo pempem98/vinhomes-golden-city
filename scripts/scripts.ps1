@@ -25,15 +25,17 @@ function Print-Usage {
     Write-Output "Commands:"
     Write-ColorOutput "Green" "  init        Initialize database with sample data (removes existing)"
     Write-ColorOutput "Green" "  init-safe   Initialize database safely (keeps existing data)"
-    Write-ColorOutput "Green" "  simulate    Start live updates simulation"
+    Write-ColorOutput "Green" "  simulate    Start live updates simulation (adds new apartments)"
+    Write-ColorOutput "Green" "  simulate:status Start status change simulation (only changes status)"
     Write-ColorOutput "Green" "  clean       Clean database (remove all data)"
     Write-ColorOutput "Green" "  install     Install dependencies"
     Write-ColorOutput "Green" "  help        Show this help message"
     Write-Output ""
     Write-Output "Examples:"
-    Write-Output "  .\scripts.ps1 init      # Initialize database (destructive)"
-    Write-Output "  .\scripts.ps1 init-safe # Initialize database (safe mode)"
-    Write-Output "  .\scripts.ps1 simulate  # Start simulation"
+    Write-Output "  .\scripts.ps1 init             # Initialize database (destructive)"
+    Write-Output "  .\scripts.ps1 init-safe        # Initialize database (safe mode)"
+    Write-Output "  .\scripts.ps1 simulate         # Start full simulation"
+    Write-Output "  .\scripts.ps1 simulate:status  # Only change apartment status"
 }
 
 function Check-Node {
@@ -90,6 +92,25 @@ function Start-Simulation {
     Write-Output ""
     
     node simulate-live-updates.js
+}
+
+function Start-StatusSimulation {
+    Print-Header
+    Write-ColorOutput "Blue" "🔄 Starting Status Change Simulation"
+    Write-Output ""
+    
+    if (-Not (Check-Node)) {
+        exit 1
+    }
+    
+    Check-Dependencies
+    
+    Write-ColorOutput "Yellow" "Make sure the backend server is running on http://localhost:5000"
+    Write-ColorOutput "Green" "This simulation only changes apartment status (no apartments added/removed)"
+    Write-ColorOutput "Yellow" "Press Ctrl+C to stop simulation"
+    Write-Output ""
+    
+    node simulate-status-changes.js
 }
 
 function Clean-Database {
@@ -155,6 +176,9 @@ switch ($Command.ToLower()) {
     }
     "simulate" {
         Start-Simulation
+    }
+    "simulate:status" {
+        Start-StatusSimulation
     }
     "clean" {
         Clean-Database
