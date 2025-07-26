@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import ApartmentTable from './components/ApartmentTable';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import { SOCKET_EVENTS, APP_CONFIG } from './constants';
+import { t } from './locales';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || APP_CONFIG.DEFAULT_BACKEND_URL;
 
@@ -9,6 +11,17 @@ function App() {
   const [apartments, setApartments] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [, setForceRender] = useState(0); // For forcing re-render on locale change
+
+  // Listen for locale changes
+  useEffect(() => {
+    const handleLocaleChange = () => {
+      setForceRender(prev => prev + 1);
+    };
+
+    window.addEventListener('localeChanged', handleLocaleChange);
+    return () => window.removeEventListener('localeChanged', handleLocaleChange);
+  }, []);
 
   useEffect(() => {
     // Establish Socket.IO connection
@@ -49,20 +62,22 @@ function App() {
       
       {/* Main Content */}
       <div className="main-content">
+        <LanguageSwitcher />
+        
         <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-          {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          {isConnected ? `🟢 ${t('common.status.connected')}` : `🔴 ${t('common.status.disconnected')}`}
         </div>
         
         <header className="dashboard-header">
-          <h1 className="dashboard-title">Real-Time Apartment Dashboard</h1>
-          <p className="dashboard-subtitle">Live updates from Google Sheets</p>
+          <h1 className="dashboard-title">{t('dashboard.title')}</h1>
+          <p className="dashboard-subtitle">{t('dashboard.subtitle')}</p>
         </header>
 
         <main className="apartment-table-container">
           {isLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
-              Loading data...
+              {t('common.loading')}
             </div>
           ) : (
             <ApartmentTable apartments={apartments} />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ApartmentGrid from './ApartmentGrid';
+import { t, formatters } from '../locales';
 
 const ApartmentTable = ({ apartments }) => {
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
@@ -67,7 +68,12 @@ const ApartmentTable = ({ apartments }) => {
           const notifications = enhancedBigSales.map((apt, index) => ({
             id: apt.id,
             level: apt.level,
-            message: `${apt.emoji} ${apt.levelName.toUpperCase()} SALE! Apartment ${apt.id} sold for ${apt.price.toFixed(1)}B VND! ${apt.emoji}`,
+            message: t('notifications.bigSale.message', {
+              level: `${apt.emoji} ${t(`notifications.bigSale.levels.${apt.level}`)}`,
+              id: apt.id,
+              price: apt.price.toFixed(1),
+              currency: t('units.vnd')
+            }),
             timestamp: Date.now(),
             delay: index * 300 // Stagger notifications by 300ms
           }));
@@ -119,23 +125,17 @@ const ApartmentTable = ({ apartments }) => {
   };
 
   const formatPrice = (price) => {
-    if (typeof price === 'number') {
-      return `${price.toFixed(1)} tỷ`;
-    }
-    return price || 'N/A';
+    return formatters.price(price);
   };
 
   const formatArea = (area) => {
-    if (typeof area === 'number') {
-      return `${area} m²`;
-    }
-    return area || 'N/A';
+    return formatters.area(area);
   };
 
   if (!apartments || apartments.length === 0) {
     return (
       <div className="loading-container">
-        <p>No apartment data to display</p>
+        <p>{t('common.noData')}</p>
       </div>
     );
   }
@@ -165,14 +165,16 @@ const ApartmentTable = ({ apartments }) => {
         <button
           className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
           onClick={() => setViewMode('list')}
+          title={t('tooltips.switchToList')}
         >
-          📋 List
+          📋 {t('viewModes.list')}
         </button>
         <button
           className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
           onClick={() => setViewMode('grid')}
+          title={t('tooltips.switchToGrid')}
         >
-          ⬜ Grid
+          ⬜ {t('viewModes.grid')}
         </button>
       </div>
 
@@ -186,18 +188,18 @@ const ApartmentTable = ({ apartments }) => {
       ) : (
         <>
           <div style={{ marginBottom: '15px', textAlign: 'right', opacity: 0.8 }}>
-            Total apartments: {apartments.length}
+            {t('common.total')} {t('common.apartments')}: {apartments.length}
           </div>
           
           <table className="apartment-table">
             <thead>
               <tr>
-                <th>Apartment ID</th>
-                <th>Agency</th>
-                <th>Area</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Last Updated</th>
+                <th>{t('table.headers.apartmentId')}</th>
+                <th>{t('table.headers.agency')}</th>
+                <th>{t('table.headers.area')}</th>
+                <th>{t('table.headers.price')}</th>
+                <th>{t('table.headers.status')}</th>
+                <th>{t('table.headers.lastUpdated')}</th>
               </tr>
             </thead>
             <tbody>
@@ -222,7 +224,7 @@ const ApartmentTable = ({ apartments }) => {
                 return (
                   <tr key={apartment.id} className={rowClass}>
                     <td style={{ fontWeight: 'bold' }}>{apartment.id}</td>
-                    <td>{apartment.agency || 'N/A'}</td>
+                    <td>{apartment.agency || t('format.noValue')}</td>
                     <td>{formatArea(apartment.area)}</td>
                     <td style={{ fontWeight: 'bold' }}>{formatPrice(apartment.price)}</td>
                     <td>
@@ -232,13 +234,13 @@ const ApartmentTable = ({ apartments }) => {
                         fontSize: '0.9rem',
                         fontWeight: '500'
                       }}>
-                        {apartment.status || 'N/A'}
+                        {formatters.status(apartment.status)}
                       </span>
                     </td>
                     <td style={{ fontSize: '0.85rem', opacity: 0.8 }}>
                       {apartment.updated_at ? 
                         new Date(apartment.updated_at).toLocaleString('vi-VN') : 
-                        'N/A'
+                        t('format.noValue')
                       }
                     </td>
                   </tr>

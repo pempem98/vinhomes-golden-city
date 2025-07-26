@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { t, formatters } from '../locales';
 
 const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingCells = new Set() }) => {
   const [previousApartments, setPreviousApartments] = useState([]);
@@ -41,27 +42,11 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
   };
 
   const formatPrice = (price) => {
-    if (typeof price === 'number') {
-      return `${price.toFixed(1)}tỷ`;
-    }
-    return price || 'N/A';
+    return formatters.price(price);
   };
 
   const formatAgency = (agency) => {
-    if (!agency) return 'N/A';
-    
-    // Create abbreviation from agency name
-    const words = agency.split(' ');
-    if (words.length === 1) {
-      return words[0].substring(0, 3).toUpperCase();
-    }
-    
-    // Take first letter of each word, max 3 letters
-    return words
-      .slice(0, 3)
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase();
+    return formatters.agency(agency);
   };
 
   const getCellSize = (apartment) => {
@@ -155,7 +140,7 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
   if (!visibleApartments || visibleApartments.length === 0) {
     return (
       <div className="loading-container">
-        <p>No apartment data to display</p>
+        <p>{t('common.noData')}</p>
       </div>
     );
   }
@@ -163,7 +148,7 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
   return (
     <div>
       <div style={{ marginBottom: '15px', textAlign: 'right', opacity: 0.8 }}>
-        Total apartments: {visibleApartments.length}
+        {t('common.total')} {t('common.apartments')}: {visibleApartments.length}
       </div>
       
       <div 
@@ -220,7 +205,14 @@ const ApartmentGrid = ({ apartments, animatingCells = new Set(), superAnimatingC
                 width: `${cellSize}px`,
                 height: `${cellSize}px`,
               }}
-              title={`${apartment.id} - ${apartment.agency} - Area: ${apartment.area}m² - ${formatPrice(apartment.price)} - ${apartment.status}`}
+              data-status-label={formatters.statusLabel(apartment.status)}
+              title={t('tooltips.apartmentInfo', {
+                id: apartment.id,
+                agency: apartment.agency,
+                area: apartment.area,
+                price: formatPrice(apartment.price),
+                status: formatters.status(apartment.status)
+              })}
             >
               <div 
                 className="cell-id"
