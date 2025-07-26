@@ -1,173 +1,247 @@
 /**
- * Google Apps Script for Real-time Apartment Ranking Dashboard
- * This script triggers when any cell in the spreadsheet is edited
- * and sends the updated row data to the backend webhook
+ * Enhanced Google Apps Script with Security
+ * This script includes signature verification and better error handling
  */
 
-// Replace this with your actual backend URL
+// Replace with your actual backend URL and secret key
 const WEBHOOK_URL = 'https://your-backend-url.com/api/update-sheet';
-// For local development, you might use something like:
-// const WEBHOOK_URL = 'http://localhost:3001/api/update-sheet';
+const WEBHOOK_SECRET = 'your-secret-key-here-change-this'; // Must match backend
 
 /**
- * Trigger function that runs when any cell is edited
- * @param {Object} e - The edit event object
+ * Generate HMAC signature for webhook security
+ */
+function generateSignature(timestamp, payload) {
+  const message = timestamp + payload;
+  const signature = Utilities.computeHmacSignature(
+    Utilities.MacAlgorithm.HMAC_SHA_256,
+    message,
+    WEBHOOK_SECRET,
+    Utilities.Charset.UTF_8
+  );
+  return Utilities.base64Encode(signature);
+}
+
+/**
+ * Enhanced onEdit trigger with security
  */
 function onEdit(e) {
   try {
-    // Get the active sheet and range
     const sheet = e.source.getActiveSheet();
     const range = e.range;
     
     // Only process edits on the main data sheet
-    // You can modify this condition based on your sheet name
     if (sheet.getName() !== 'Sheet1') {
       console.log('Edit not on main sheet, ignoring...');
       return;
     }
     
-    // Get the row number that was edited
     const editedRow = range.getRow();
     
-    // Skip header row (assuming row 1 is header)
+    // Skip header row
     if (editedRow <= 1) {
       console.log('Header row edited, ignoring...');
       return;
     }
     
-    // Get all values from the edited row
+    // Get row data with validation
     const rowData = sheet.getRange(editedRow, 1, 1, 5).getValues()[0];
     
-    // Map the row data to the expected JSON structure
-    // Columns mapping: Column A=id, B=agency, C=area, D=price, E=status
+    // Validate and create payload
     const payload = {
-      id: rowData[0] || '',
-      agency: rowData[1] || '',
+      apartment_id: String(rowData[0] || '').trim(),
+      agency: String(rowData[1] || '').trim(),
       area: parseFloat(rowData[2]) || 0,
       price: parseFloat(rowData[3]) || 0,
-      status: rowData[4] || ''
+      status: String(rowData[4] || '').trim()
     };
     
-    // Validate that we have at least the apartment ID
-    if (!payload.id) {
+    // Validate required fields
+    if (!payload.apartment_id) {
       console.log('No apartment ID found, skipping update...');
       return;
     }
     
-    console.log('Sending update for apartment:', payload.id);
-    console.log('Payload:', JSON.stringify(payload));
-    
-    // Send the data to the backend webhook
-    const response = UrlFetchApp.fetch(WEBHOOK_URL, {
-      method: 'POST',
-      contentType: 'application/json',
-      payload: JSON.stringify(payload),
-      muteHttpExceptions: true // Don't throw errors on HTTP error codes
-    });
-    
-    const responseCode = response.getResponseCode();
-    const responseText = response.getContentText();
-    
-    if (responseCode >= 200 && responseCode < 300) {
-      console.log('Successfully sent data to backend');
-      console.log('Response:', responseText);
-    } else {
-      console.error('Error response from backend:', responseCode, responseText);
+    if (!payload.agency) {
+      console.log('No agency found, skipping update...');
+      return;
     }
+    
+    // Validate ranges
+    if (payload.area < 0 || payload.area > 1000) {
+      console.log('Invalid area value:', payload.area);
+      return;
+    }
+    
+    if (payload.price < 0 || payload.price > 1000) {
+      console.log('Invalid price value:', payload.price);
+      return;
+    }
+    
+    const validStatuses = ['Sẵn hàng', 'Đang lock', 'Đã bán'];
+    if (payload.status && !validStatuses.includes(payload.status)) {
+      console.log('Invalid status:', payload.status);
+      return;
+    }
+    
+    console.log('Sending secure update for apartment:', payload.apartment_id);
+    
+    // Send authenticated request
+    sendSecureWebhook(payload);
     
   } catch (error) {
     console.error('Error in onEdit trigger:', error.toString());
-    console.error('Stack trace:', error.stack);
+    
+    // Log to spreadsheet for debugging (optional)
+    logError(e.source, error, 'onEdit');
   }
 }
 
 /**
- * Function to manually test the webhook (for debugging)
- * Run this function manually to test if your webhook is working
+ * Send authenticated webhook request
  */
-function testWebhook() {
+function sendSecureWebhook(payload) {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const payloadString = JSON.stringify(payload);
+    const signature = generateSignature(timestamp, payloadString);
+    
+    const options = {
+      method: 'POST',
+      contentType: 'application/json',
+      headers: {
+        'X-Webhook-Signature': signature,
+        'X-Webhook-Timestamp': timestamp,
+        'User-Agent': 'GoogleAppsScript-RealEstateDashboard/1.0'
+      },
+      payload: payloadString,
+      muteHttpExceptions: true
+    };
+    
+    const response = UrlFetchApp.fetch(WEBHOOK_URL, options);
+    const responseCode = response.getResponseCode();
+    const responseText = response.getContentText();
+    
+    if (responseCode >= 200 && responseCode < 300) {
+      console.log('Successfully sent authenticated data to backend');
+      console.log('Response:', responseText);
+    } else {
+      console.error('Error response from backend:', responseCode, responseText);
+      
+      // Retry logic for temporary failures
+      if (responseCode >= 500 && responseCode < 600) {
+        console.log('Server error, will retry in 5 seconds...');
+        Utilities.sleep(5000);
+        
+        // Single retry attempt
+        const retryResponse = UrlFetchApp.fetch(WEBHOOK_URL, options);
+        if (retryResponse.getResponseCode() >= 200 && retryResponse.getResponseCode() < 300) {
+          console.log('Retry successful');
+        } else {
+          console.error('Retry failed:', retryResponse.getResponseCode(), retryResponse.getContentText());
+        }
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error sending webhook:', error.toString());
+  }
+}
+
+/**
+ * Enhanced test function with authentication
+ */
+function testSecureWebhook() {
   const testPayload = {
-    id: 'TEST01',
+    apartment_id: 'TEST01',
     agency: 'Test Agency',
     area: 85.5,
     price: 6.2,
     status: 'Đang lock'
   };
   
+  console.log('Testing secure webhook with payload:', JSON.stringify(testPayload));
+  sendSecureWebhook(testPayload);
+}
+
+/**
+ * Log errors to a separate sheet for monitoring
+ */
+function logError(spreadsheet, error, source) {
   try {
-    console.log('Testing webhook with payload:', JSON.stringify(testPayload));
+    let errorSheet = spreadsheet.getSheetByName('Errors');
     
-    const response = UrlFetchApp.fetch(WEBHOOK_URL, {
-      method: 'POST',
-      contentType: 'application/json',
-      payload: JSON.stringify(testPayload),
-      muteHttpExceptions: true
-    });
-    
-    const responseCode = response.getResponseCode();
-    const responseText = response.getContentText();
-    
-    console.log('Response code:', responseCode);
-    console.log('Response text:', responseText);
-    
-    if (responseCode >= 200 && responseCode < 300) {
-      console.log('✅ Webhook test successful!');
-    } else {
-      console.log('❌ Webhook test failed');
+    if (!errorSheet) {
+      errorSheet = spreadsheet.insertSheet('Errors');
+      errorSheet.getRange(1, 1, 1, 4).setValues([['Timestamp', 'Source', 'Error', 'Stack']]);
     }
     
-  } catch (error) {
-    console.error('Error testing webhook:', error.toString());
+    const timestamp = new Date().toISOString();
+    errorSheet.appendRow([timestamp, source, error.toString(), error.stack || 'N/A']);
+    
+    // Keep only last 100 error logs
+    if (errorSheet.getLastRow() > 101) {
+      errorSheet.deleteRows(2, errorSheet.getLastRow() - 101);
+    }
+    
+  } catch (logError) {
+    console.error('Error logging to sheet:', logError.toString());
   }
 }
 
 /**
- * Function to send all existing data to the backend (for initial sync)
- * Run this function after setting up your sheet to sync all existing data
+ * Enhanced sync function with authentication and batching
  */
-function syncAllData() {
+function syncAllDataSecure() {
   try {
     const sheet = SpreadsheetApp.getActiveSheet();
     const dataRange = sheet.getDataRange();
     const values = dataRange.getValues();
     
-    // Skip header row
-    for (let i = 1; i < values.length; i++) {
-      const rowData = values[i];
+    const batchSize = 10;
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // Process in batches to avoid overwhelming the server
+    for (let i = 1; i < values.length; i += batchSize) {
+      const batch = values.slice(i, Math.min(i + batchSize, values.length));
       
-      const payload = {
-        id: rowData[0] || '',
-        agency: rowData[1] || '',
-        area: parseFloat(rowData[2]) || 0,
-        price: parseFloat(rowData[3]) || 0,
-        status: rowData[4] || ''
-      };
-      
-      // Skip empty rows
-      if (!payload.id) continue;
-      
-      console.log(`Syncing apartment ${payload.id}...`);
-      
-      const response = UrlFetchApp.fetch(WEBHOOK_URL, {
-        method: 'POST',
-        contentType: 'application/json',
-        payload: JSON.stringify(payload),
-        muteHttpExceptions: true
-      });
-      
-      if (response.getResponseCode() >= 200 && response.getResponseCode() < 300) {
-        console.log(`✅ Synced ${payload.id}`);
-      } else {
-        console.log(`❌ Failed to sync ${payload.id}: ${response.getContentText()}`);
+      for (const rowData of batch) {
+        const payload = {
+          apartment_id: String(rowData[0] || '').trim(),
+          agency: String(rowData[1] || '').trim(),
+          area: parseFloat(rowData[2]) || 0,
+          price: parseFloat(rowData[3]) || 0,
+          status: String(rowData[4] || '').trim()
+        };
+        
+        // Skip invalid rows
+        if (!payload.apartment_id || !payload.agency) continue;
+        
+        console.log(`Syncing apartment ${payload.apartment_id}...`);
+        
+        try {
+          sendSecureWebhook(payload);
+          successCount++;
+        } catch (error) {
+          console.error(`Failed to sync ${payload.apartment_id}:`, error.toString());
+          errorCount++;
+        }
+        
+        // Small delay between requests
+        Utilities.sleep(200);
       }
       
-      // Add a small delay to avoid overwhelming the server
-      Utilities.sleep(100);
+      // Longer delay between batches
+      if (i + batchSize < values.length) {
+        console.log(`Completed batch, waiting before next batch...`);
+        Utilities.sleep(2000);
+      }
     }
     
-    console.log('✅ All data sync completed!');
+    console.log(`✅ Sync completed! Success: ${successCount}, Errors: ${errorCount}`);
     
   } catch (error) {
-    console.error('Error syncing all data:', error.toString());
+    console.error('Error in syncAllDataSecure:', error.toString());
+    logError(SpreadsheetApp.getActiveSpreadsheet(), error, 'syncAllDataSecure');
   }
 }

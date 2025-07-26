@@ -20,7 +20,7 @@ export const vi = {
 
   // Status
   status: {
-    available: 'Sẵn sàng',
+    available: 'Sẵn hàng',
     sold: 'Đã bán', 
     locked: 'Đang lock',
     unknown: 'Không xác định'
@@ -29,7 +29,8 @@ export const vi = {
   // Status labels for grid cells
   statusLabels: {
     sold: 'SOLD',
-    locked: 'LOCK'
+    locked: 'LOCK',
+    available: 'AVAILABLE'
   },
 
   // View modes
@@ -80,7 +81,7 @@ export const vi = {
     total: 'Tổng số',
     sold: 'Đã bán',
     locked: 'Đang lock',
-    available: 'Sẵn sàng'
+    available: 'Sẵn hàng'
   },
 
   // Dashboard

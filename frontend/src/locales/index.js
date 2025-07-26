@@ -92,7 +92,7 @@ export const formatters = {
     
     if (normalizedStatus === 'Đã bán') return t('status.sold');
     if (normalizedStatus === 'Đang lock') return t('status.locked');
-    if (normalizedStatus === 'Sẵn sàng') return t('status.available');
+    if (normalizedStatus === 'Sẵn hàng') return t('status.available');
     
     return t('status.unknown');
   },
@@ -102,6 +102,7 @@ export const formatters = {
     
     if (normalizedStatus === 'Đã bán') return t('statusLabels.sold');
     if (normalizedStatus === 'Đang lock') return t('statusLabels.locked');
+    if (normalizedStatus === 'Sẵn hàng') return t('statusLabels.available');
     
     return '';
   }

@@ -63,7 +63,7 @@ function generateApartments(count = 150) {
     'Golden Tower Properties', 'Sapphire Estates', 'Pearl Harbor Homes', 'Ruby Real Estate',
     'Jade Properties Group', 'Opal Living Spaces', 'Amber Residential', 'Diamond Peak Realty'
   ];
-  const statuses = ['Sẵn sàng', 'Đang lock', 'Đã bán'];
+  const statuses = ['Sẵn hàng', 'Đang lock', 'Đã bán'];
   
   const apartments = [];
   
@@ -97,7 +97,7 @@ function generateApartments(count = 150) {
     // Status distribution: 60% available, 25% locked, 15% sold
     let status;
     const statusRand = Math.random();
-    if (statusRand < 0.6) status = 'Sẵn sàng';
+    if (statusRand < 0.6) status = 'Sẵn hàng';
     else if (statusRand < 0.85) status = 'Đang lock';
     else status = 'Đã bán';
     
@@ -195,7 +195,7 @@ db.run(createTableSQL, (err) => {
               console.error('❌ Error getting summary:', err.message);
             } else {
               rows.forEach(row => {
-                const emoji = row.status === 'Sẵn sàng' ? '🟢' : 
+                const emoji = row.status === 'Sẵn hàng' ? '🟢' : 
                              row.status === 'Đã bán' ? '🔴' : '🟡';
                 console.log(`${emoji} ${row.status}: ${row.count} apartments`);
               });

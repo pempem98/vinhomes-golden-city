@@ -20,7 +20,7 @@ export const en = {
 
   // Status
   status: {
-    available: 'Ready',
+    available: 'Available',
     sold: 'Sold',
     locked: 'Locked',
     unknown: 'Unknown'
@@ -29,7 +29,8 @@ export const en = {
   // Status labels for grid cells
   statusLabels: {
     sold: 'SOLD',
-    locked: 'LOCK'
+    locked: 'LOCK',
+    available: 'AVAILABLE'
   },
 
   // View modes

@@ -1,8 +1,102 @@
 const axios = require('axios');
+const crypto = require('crypto');
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'your-secret-key-here-change-this';
 const SIMULATION_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
-const UPDATE_INTERVAL = 1000; // Update every 1 second (faster updates!)
+const UPDATE_INTERVAL = 1000; // Update every 1 second
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+/**
+ * Generate HMAC signature for webhook security
+ */
+function generateSignature(timestamp, payload) {
+  const message = timestamp + payload;
+  return crypto
+    .createHmac('sha256', WEBHOOK_SECRET)
+    .update(message)
+    .digest('hex');
+}
+
+/**
+ * Send authenticated request to backend
+ */
+async function sendSecureRequest(data, retryCount = 0) {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const payloadString = JSON.stringify(data);
+    const signature = generateSignature(timestamp, payloadString);
+    
+    const options = {
+      method: 'POST',
+      url: `${BACKEND_URL}/api/update-sheet`,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Signature': signature,
+        'X-Webhook-Timestamp': timestamp,
+        'User-Agent': 'SecureSimulator-LiveUpdates/1.0'
+      },
+      data: data,
+      timeout: 5000, // 5 second timeout
+      validateStatus: (status) => status < 500 // Don't throw for 4xx errors
+    };
+    
+    const response = await axios(options);
+    
+    if (response.status >= 200 && response.status < 300) {
+      return { success: true, data: response.data };
+    } else {
+      console.warn(`⚠️ Backend returned ${response.status}: ${response.statusText}`);
+      return { success: false, error: `HTTP ${response.status}` };
+    }
+    
+  } catch (error) {
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      if (retryCount < MAX_RETRIES) {
+        console.warn(`🔄 Connection failed, retrying in ${RETRY_DELAY}ms... (${retryCount + 1}/${MAX_RETRIES})`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return sendSecureRequest(data, retryCount + 1);
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: error.message || 'Unknown error',
+      code: error.code
+    };
+  }
+}
+
+/**
+ * Validate apartment data before sending
+ */
+function validateApartmentData(apartment) {
+  const errors = [];
+  
+  if (!apartment.apartment_id || typeof apartment.apartment_id !== 'string') {
+    errors.push('apartment_id is required and must be a string');
+  }
+  
+  if (!apartment.agency || typeof apartment.agency !== 'string') {
+    errors.push('agency is required and must be a string');
+  }
+  
+  if (typeof apartment.area !== 'number' || apartment.area <= 0 || apartment.area > 1000) {
+    errors.push('area must be a positive number less than 1000');
+  }
+  
+  if (typeof apartment.price !== 'number' || apartment.price <= 0 || apartment.price > 1000) {
+    errors.push('price must be a positive number less than 1000');
+  }
+  
+  const validStatuses = ['Sẵn hàng', 'Đang lock', 'Đã bán'];
+  if (!validStatuses.includes(apartment.status)) {
+    errors.push(`status must be one of: ${validStatuses.join(', ')}`);
+  }
+  
+  return errors;
+}
 
 // Function to generate apartments for simulation based on real Vinhomes Duong Kinh data
 function generateApartments(count = 200) {
@@ -40,7 +134,8 @@ function generateApartments(count = 200) {
     'BigHomes Group', 'ATD Homes', 'An Holding', 'AHS', 'One Housing'
   ];
   
-  const statuses = ['Sẵn sàng', 'Đang lock', 'Đã bán'];
+  // Updated statuses to match backend validation
+  const statuses = ['Sẵn hàng', 'Đang lock', 'Đã bán'];
   const apartments = [];
   const usedIds = new Set();
   
@@ -57,7 +152,7 @@ function generateApartments(count = 200) {
         const zone = zones[Math.floor(Math.random() * zones.length)];
         const baseCode = apartmentCodes[Math.floor(Math.random() * apartmentCodes.length)];
         const randomNum = Math.floor(Math.random() * 999) + 1;
-        apartmentId = baseCode.replace(/\d+/g, String(randomNum).padStart(2, '0'));
+        apartmentId = baseCode.replace(/\\d+/g, String(randomNum).padStart(2, '0'));
         attempts++;
       } while (usedIds.has(apartmentId) && attempts < 100);
       
@@ -103,12 +198,12 @@ function generateApartments(count = 200) {
     // Status distribution: 60% available, 25% locked, 15% sold
     let status;
     const statusRand = Math.random();
-    if (statusRand < 0.6) status = 'Sẵn sàng';
+    if (statusRand < 0.6) status = 'Sẵn hàng';
     else if (statusRand < 0.85) status = 'Đang lock';
     else status = 'Đã bán';
     
     apartments.push({
-      id: apartmentId,
+      apartment_id: apartmentId, // Updated field name
       zone: zone,
       propertyType: propertyType,
       constructionStatus: constructionType,
@@ -129,16 +224,16 @@ const apartments = generateApartments(200);
 // Status transition rules: Available → Lock → (Sold or Available), Sold = final
 function getNextStatus(currentStatus) {
   if (currentStatus === 'Đã bán') {
-    // Sold is final state - no changes
+    // Final state - no changes
     return currentStatus;
-  } else if (currentStatus === 'Sẵn sàng') {
+  } else if (currentStatus === 'Sẵn hàng') {
     // Available can only go to Lock
-    return Math.random() < 0.7 ? 'Đang lock' : 'Sẵn sàng'; // 70% chance to lock
+    return Math.random() < 0.7 ? 'Đang lock' : 'Sẵn hàng'; // 70% chance to lock
   } else if (currentStatus === 'Đang lock') {
     // Lock can go to Sold or back to Available
     const rand = Math.random();
     if (rand < 0.4) return 'Đã bán';     // 40% chance to sell
-    else if (rand < 0.7) return 'Sẵn sàng'; // 30% chance back to available
+    else if (rand < 0.7) return 'Sẵn hàng'; // 30% chance back to available
     else return 'Đang lock';              // 30% chance stay locked
   }
   return currentStatus;
@@ -159,22 +254,28 @@ const agencyUpdates = [
 ];
 
 let updateCount = 0;
+let successCount = 0;
+let errorCount = 0;
 let startTime = Date.now();
 
-console.log('🎬 Starting Live Simulation - Real-Time Apartment Dashboard');
+console.log('🔒 Secure Live Simulation - Real-Time Apartment Dashboard');
 console.log('='.repeat(60));
 console.log(`⏱️  Duration: 2 minutes`);
 console.log(`🔄 Update interval: ${UPDATE_INTERVAL/1000} seconds`);
 console.log(`🏢 Apartments: ${apartments.length} properties`);
+console.log(`🛡️  Security: HMAC-SHA256 authentication enabled`);
+console.log(`🌐 Backend URL: ${BACKEND_URL}`);
 console.log('='.repeat(60));
 console.log('📱 Open http://localhost:3000 to watch the live updates!');
 console.log('='.repeat(60));
 
 async function checkBackend() {
   try {
-    await axios.get(`${BACKEND_URL}/api/health`);
+    const response = await axios.get(`${BACKEND_URL}/api/health`, { timeout: 5000 });
+    console.log('✅ Backend health check passed');
     return true;
   } catch (error) {
+    console.error('❌ Backend health check failed:', error.message);
     return false;
   }
 }
@@ -195,22 +296,27 @@ async function simulateUpdate() {
   const elapsed = currentTime - startTime;
   
   if (elapsed >= SIMULATION_DURATION) {
-    console.log('\n🎉 Simulation Complete!');
+    console.log('\\n🎉 Simulation Complete!');
     console.log(`📊 Total updates sent: ${updateCount}`);
+    console.log(`✅ Successful: ${successCount}`);
+    console.log(`❌ Failed: ${errorCount}`);
+    console.log(`📈 Success rate: ${updateCount > 0 ? ((successCount / updateCount) * 100).toFixed(1) : 0}%`);
     console.log('✨ Check your dashboard for the final state');
     process.exit(0);
   }
   
   try {
-    // Filter apartments that can still change (not sold)
-    const availableApartments = apartments.filter(apt => apt.status !== 'Đã bán');
+    // Filter apartments that can still change (not final status)
+    const availableApartments = apartments.filter(apt => 
+      apt.status !== 'Đã bán'
+    );
     
     if (availableApartments.length === 0) {
-      console.log('\n🏆 All apartments are sold! Ending simulation...');
+      console.log('\\n🏆 All apartments are sold! Ending simulation...');
       process.exit(0);
     }
     
-    // Pick a random apartment to update (only from non-sold ones)
+    // Pick a random apartment to update (only from changeable ones)
     const apartment = getRandomElement(availableApartments);
     const newStatus = getNextStatus(apartment.status);
     
@@ -222,6 +328,10 @@ async function simulateUpdate() {
     if (Math.random() < 0.3) { // 30% chance to update agency
       const update = getRandomElement(agencyUpdates);
       agency = `${apartment.agency} - ${update}`;
+      // Limit length to prevent validation errors
+      if (agency.length > 100) {
+        agency = agency.substring(0, 97) + '...';
+      }
     }
     
     // Sometimes slightly adjust price (±0.1-0.3 billion)
@@ -234,30 +344,39 @@ async function simulateUpdate() {
     }
     
     const updateData = {
-      apartment_id: apartment.id,
+      apartment_id: apartment.apartment_id,
       agency: agency,
-      agency_short: apartment.agency_short,
       area: apartment.area,
       price: price,
       status: newStatus
     };
     
-    const response = await axios.post(`${BACKEND_URL}/api/update-sheet`, updateData, {
-      headers: { 
-        'Content-Type': 'application/json; charset=utf-8',
-        'Accept-Charset': 'utf-8'
-      }
-    });
+    // Validate data before sending
+    const validationErrors = validateApartmentData(updateData);
+    if (validationErrors.length > 0) {
+      console.log(`❌ Validation failed for ${apartment.apartment_id}: ${validationErrors.join(', ')}`);
+      errorCount++;
+      return;
+    }
     
+    const result = await sendSecureRequest(updateData);
     updateCount++;
-    const remaining = formatTime(SIMULATION_DURATION - elapsed);
-    const statusEmoji = newStatus === 'Đã bán' ? '🔴' : newStatus === 'Đang lock' ? '🟡' : '🟢';
-    const soldCount = apartments.filter(apt => apt.status === 'Đã bán').length;
     
-    console.log(`[${remaining}] ${statusEmoji} ${apartment.id} → ${newStatus} | ${agency.substring(0, 25)}${agency.length > 25 ? '...' : ''} | ${price} tỷ (${soldCount}/${apartments.length} sold)`);
+    if (result.success) {
+      successCount++;
+      const remaining = formatTime(SIMULATION_DURATION - elapsed);
+      const statusEmoji = newStatus === 'Đã bán' ? '🔴' : newStatus === 'Đang lock' ? '🟡' : '🟢';
+      const finalCount = apartments.filter(apt => apt.status === 'Đã bán').length;
+      
+      console.log(`[${remaining}] ${statusEmoji} ${apartment.apartment_id} → ${newStatus} | ${agency.substring(0, 25)}${agency.length > 25 ? '...' : ''} | ${price} tỷ (${finalCount}/${apartments.length} sold)`);
+    } else {
+      errorCount++;
+      console.log(`❌ Update failed for ${apartment.apartment_id}: ${result.error}`);
+    }
     
   } catch (error) {
-    console.log(`❌ Update failed: ${error.message}`);
+    errorCount++;
+    console.log(`❌ Unexpected error: ${error.message}`);
   }
 }
 
@@ -309,44 +428,38 @@ function getAgencyShortName(agencyName) {
   return shortNameMap[agencyName] || agencyName.substring(0, 3).toUpperCase();
 }
 
-function generateSampleApartments(count = 150) {
-  const sampleAgencies = [
-    'ELITE CAPITAL', 'TPLAND', 'Vinsland', 'CELLA', 'Vietstarland', 'VHS',
-    'Tân Thời Đại', 'Trường Phát Land', 'Thiên Phúc Group', 'Thành Phát Land',
-    'Tân Long', 'Tân Hương Phát', 'Southern Homes', 'Real Homes', 'QueenLand Group',
-    'QTC', 'Phúc Lộc', 'Phú Gia Land', 'NOVASKY', 'Newway Realty',
-    'New Star Land', 'MICC Group', 'MGVN', 'MD Land', 'Mayhomes',
-    'Joy Homes', 'Home Plus', 'HD Homes', 'GALAXY', 'Future Homes',
-    'Five Star', 'Eternity Group', 'Đông Tây Land', 'Đông Đô Land', 'Đất Việt',
-    'BigHomes Group', 'ATD Homes', 'An Holding', 'AHS', 'One Housing'
-  ];
+// Main execution
+async function main() {
+  console.log('🔒 Starting Secure Live Updates Simulation...');
   
-  return Array.from({ length: count }, (_, i) => {
-    const agency = getRandomElement(sampleAgencies);
-    const basePrice = Math.floor(Math.random() * 20 + 5) * 100000000; // 5-25 tỷ
-    const price = Math.round(basePrice / 1000000) * 1000000; // Round to nearest million
-    
-    return {
-      id: `APT-${i + 1}`,
-      zone: i % 2 === 0 ? 'Thiên Hà' : 'Ánh Sao',
-      propertyType: getRandomElement(['Shophouse', 'Song Lập', 'Liền kề', 'Đơn lập']),
-      constructionStatus: getRandomElement(['Thô', 'Hoàn thiện']),
-      agency: agency,
-      area: Math.floor(Math.random() * 100 + 50), // 50-150 m²
-      price: price,
-      status: getRandomElement(['Sẵn sàng', 'Đang lock', 'Đã bán'])
-    };
+  // Check environment variables
+  if (WEBHOOK_SECRET === 'your-secret-key-here-change-this') {
+    console.warn('⚠️  WARNING: Using default webhook secret. Please set WEBHOOK_SECRET environment variable!');
+  }
+  
+  // Check backend connectivity
+  const isBackendReady = await checkBackend();
+  if (!isBackendReady) {
+    console.error('❌ Cannot connect to backend. Please ensure the server is running and accessible.');
+    process.exit(1);
+  }
+  
+  // Start simulation
+  const intervalId = setInterval(simulateUpdate, UPDATE_INTERVAL);
+  
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('\\n🛑 Simulation stopped by user');
+    console.log(`📊 Total updates: ${updateCount}`);
+    console.log(`✅ Successful: ${successCount}`);
+    console.log(`❌ Failed: ${errorCount}`);
+    clearInterval(intervalId);
+    process.exit(0);
   });
 }
 
-// Sample apartment data for initial load
-const sampleApartments = generateSampleApartments(10);
-
-// Initial agency short names generation
-const agencyShortNames = Object.fromEntries(
-  Object.keys(agencies).map(key => [key, getAgencyShortName(key)]))
-;
-
-// Log initial sample apartments and agency short names
-console.log('🏠 Sample Apartments:', JSON.stringify(sampleApartments, null, 2));
-console.log('🏢 Agency Short Names:', agencyShortNames);
+// Run the simulation
+main().catch(error => {
+  console.error('❌ Fatal error:', error.message);
+  process.exit(1);
+});

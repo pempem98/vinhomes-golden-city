@@ -8,6 +8,8 @@ const ApartmentTable = ({ apartments }) => {
   const [previousApartments, setPreviousApartments] = useState([]);
   const [bigSaleNotifications, setBigSaleNotifications] = useState([]);
   const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [isChangingNotification, setIsChangingNotification] = useState(false);
   const [superAnimatingCells, setSuperAnimatingCells] = useState(new Set());
   const [recentlySoldApartments, setRecentlySoldApartments] = useState(new Set());
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 480);
@@ -22,17 +24,112 @@ const ApartmentTable = ({ apartments }) => {
     LEVEL_3: 15    // Gold level
   };
 
-  const MAX_NOTIFICATIONS = 3; // Maximum notifications shown at once
+  const MAX_NOTIFICATIONS = 10; // Maximum notifications in queue
 
-  // Handle window resize to detect mobile
+  // Handle window resize to detect mobile and controls wrapping
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 480);
+      
+      // Detect if controls are wrapping
+      const checkControlsWrapping = () => {
+        const tableControls = document.querySelector('.table-controls');
+        const gridControls = document.querySelector('.grid-controls');
+        const banner = document.querySelector('.sale-notification-banner');
+        
+        if (banner) {
+          let isWrapped = false;
+          
+          // Check table controls wrapping
+          if (tableControls) {
+            const rect = tableControls.getBoundingClientRect();
+            const children = tableControls.children;
+            if (children.length > 1) {
+              const firstChild = children[0].getBoundingClientRect();
+              const lastChild = children[children.length - 1].getBoundingClientRect();
+              // If children are not on the same horizontal line
+              isWrapped = Math.abs(firstChild.top - lastChild.top) > 10;
+            }
+          }
+          
+          // Check grid controls wrapping
+          if (gridControls && !isWrapped) {
+            const rect = gridControls.getBoundingClientRect();
+            const children = gridControls.children;
+            if (children.length > 1) {
+              const firstChild = children[0].getBoundingClientRect();
+              const lastChild = children[children.length - 1].getBoundingClientRect();
+              // If children are not on the same horizontal line
+              isWrapped = Math.abs(firstChild.top - lastChild.top) > 10;
+            }
+          }
+          
+          // Apply or remove the wrapped class
+          if (isWrapped) {
+            banner.classList.add('controls-wrapped');
+          } else {
+            banner.classList.remove('controls-wrapped');
+          }
+        }
+      };
+      
+      // Small delay to allow layout to settle
+      setTimeout(checkControlsWrapping, 100);
     };
+
+    // Initial check
+    handleResize();
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Check controls wrapping on mount and when viewMode changes
+  useEffect(() => {
+    const checkControlsWrapping = () => {
+      const tableControls = document.querySelector('.table-controls');
+      const gridControls = document.querySelector('.grid-controls');
+      const banner = document.querySelector('.sale-notification-banner');
+      
+      if (banner) {
+        let isWrapped = false;
+        
+        // Check table controls wrapping (only if in list view)
+        if (tableControls && viewMode === 'list') {
+          const children = Array.from(tableControls.children);
+          if (children.length > 1) {
+            const firstChild = children[0].getBoundingClientRect();
+            const lastChild = children[children.length - 1].getBoundingClientRect();
+            // If children are not on the same horizontal line
+            isWrapped = Math.abs(firstChild.top - lastChild.top) > 10;
+          }
+        }
+        
+        // Check grid controls wrapping (only if in grid view)
+        if (gridControls && viewMode === 'grid' && !isWrapped) {
+          const children = Array.from(gridControls.children);
+          if (children.length > 1) {
+            const firstChild = children[0].getBoundingClientRect();
+            const lastChild = children[children.length - 1].getBoundingClientRect();
+            // If children are not on the same horizontal line
+            isWrapped = Math.abs(firstChild.top - lastChild.top) > 10;
+          }
+        }
+        
+        // Apply or remove the wrapped class
+        if (isWrapped) {
+          banner.classList.add('controls-wrapped');
+        } else {
+          banner.classList.remove('controls-wrapped');
+        }
+      }
+    };
+    
+    // Small delay to allow layout to settle after viewMode change
+    const timeoutId = setTimeout(checkControlsWrapping, 150);
+    
+    return () => clearTimeout(timeoutId);
+  }, [viewMode, apartments.length]);
 
   useEffect(() => {
     if (apartments.length > 0) {
@@ -81,7 +178,7 @@ const ApartmentTable = ({ apartments }) => {
           const bigSaleIds = new Set(enhancedBigSales.map(apt => ({ id: apt.id, level: apt.level })));
           setSuperAnimatingCells(bigSaleIds);
 
-          // Add notification messages with levels and staggered timing
+          // Add notification messages with levels
           const notifications = enhancedBigSales.map((apt, index) => ({
             id: apt.id,
             level: apt.level,
@@ -91,39 +188,33 @@ const ApartmentTable = ({ apartments }) => {
               price: apt.price.toFixed(1),
               currency: t('units.vnd')
             }),
-            timestamp: Date.now(),
-            delay: index * 300 // Stagger notifications by 300ms
+            timestamp: Date.now() + index // Ensure unique timestamps
           }));
           
-          // Add notifications with staggered timing
-          notifications.forEach((notification, index) => {
-            setTimeout(() => {
-              setBigSaleNotifications(prev => {
-                const newNotifications = [...prev, notification];
-                // Keep only the latest MAX_NOTIFICATIONS
-                return newNotifications.slice(-MAX_NOTIFICATIONS);
-              });
-            }, notification.delay);
+          // Add notifications to queue
+          setBigSaleNotifications(prev => {
+            const newNotifications = [...prev, ...notifications];
+            // Keep only the latest MAX_NOTIFICATIONS
+            return newNotifications.slice(-MAX_NOTIFICATIONS);
           });
 
-          // Auto-remove notifications after longer duration to allow queue rotation
-          notifications.forEach(notification => {
-            const duration = 20000 + (notification.level * 5000); // 20-35 seconds for proper queue rotation
-            setTimeout(() => {
-              setBigSaleNotifications(prev => {
-                const filtered = prev.filter(notif => notif.id !== notification.id);
-                // Reset index if needed
-                if (filtered.length > 0) {
-                  setCurrentNotificationIndex(prevIndex => 
-                    prevIndex >= filtered.length ? 0 : prevIndex
-                  );
-                } else {
-                  setCurrentNotificationIndex(0);
-                }
-                return filtered;
-              });
-            }, duration + notification.delay);
-          });
+          // Auto-remove notifications after total queue cycle
+          const notificationDuration = 15000; // 15 seconds per notification
+          const totalDuration = notificationDuration * bigSaleNotifications.length + notificationDuration * notifications.length;
+          
+          setTimeout(() => {
+            setBigSaleNotifications(prev => {
+              const filtered = prev.filter(notif => !notifications.find(n => n.id === notif.id));
+              // Reset index if current index is out of bounds
+              if (filtered.length === 0) {
+                setCurrentNotificationIndex(0);
+                setIsProcessingQueue(false);
+              } else if (currentNotificationIndex >= filtered.length) {
+                setCurrentNotificationIndex(0);
+              }
+              return filtered;
+            });
+          }, totalDuration);
         }
 
         // Track all apartments that just became sold (for 10s animation)
@@ -162,16 +253,53 @@ const ApartmentTable = ({ apartments }) => {
     setPreviousApartments([...apartments]);
   }, [apartments]);
 
-  // Notification queue rotation effect
-  useEffect(() => {
-    if (bigSaleNotifications.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentNotificationIndex(prev => 
-          (prev + 1) % bigSaleNotifications.length
-        );
-      }, 4000); // Change notification every 4 seconds
+  // Banner hiển thị tĩnh - không cần animation marquee
+  // Chỉ theo dõi bigSaleNotifications để cập nhật banner khi có thay đổi
 
-      return () => clearInterval(interval);
+  // Queue processing - hiển thị từng notification một
+  useEffect(() => {
+    let timeoutId;
+    
+    if (bigSaleNotifications.length > 0) {
+      if (!isProcessingQueue) {
+        setIsProcessingQueue(true);
+        setCurrentNotificationIndex(0);
+      }
+      
+      // Tự động chuyển sang notification tiếp theo
+      timeoutId = setTimeout(() => {
+        if (bigSaleNotifications.length > 1) {
+          // Bắt đầu hiệu ứng fade
+          setIsChangingNotification(true);
+          
+          setTimeout(() => {
+            setCurrentNotificationIndex(prev => {
+              const nextIndex = (prev + 1) % bigSaleNotifications.length;
+              return nextIndex;
+            });
+            
+            // Kết thúc hiệu ứng fade
+            setTimeout(() => {
+              setIsChangingNotification(false);
+            }, 300);
+          }, 250);
+        }
+      }, 15000); // 15 giây mỗi notification
+    }
+    
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [bigSaleNotifications, currentNotificationIndex, isProcessingQueue]);
+
+  // Reset queue khi không còn notification
+  useEffect(() => {
+    if (bigSaleNotifications.length === 0) {
+      setCurrentNotificationIndex(0);
+      setIsProcessingQueue(false);
+      setIsChangingNotification(false);
     }
   }, [bigSaleNotifications.length]);
 
@@ -180,7 +308,7 @@ const ApartmentTable = ({ apartments }) => {
     
     if (normalizedStatus === 'Đã bán') return 'status-sold';
     if (normalizedStatus === 'Đang lock') return 'status-locked';
-    if (normalizedStatus === 'Sẵn sàng') return 'status-available';
+    if (normalizedStatus === 'Sẵn hàng') return 'status-available';
     
     return '';
   };
@@ -303,7 +431,7 @@ const ApartmentTable = ({ apartments }) => {
     const total = 238; // Fixed total
     const sold = apartments.filter(apt => apt.status === 'Đã bán').length;
     const locked = apartments.filter(apt => apt.status === 'Đang lock').length;
-    const available = apartments.filter(apt => apt.status === 'Sẵn sàng').length;
+    const available = apartments.filter(apt => apt.status === 'Sẵn hàng').length;
     
     return { total, sold, locked, available };
   };
@@ -321,8 +449,8 @@ const ApartmentTable = ({ apartments }) => {
       {/* Sales Notification Banner - Between header and content */}
       {bigSaleNotifications.length > 0 && (
         <div 
-          className="sale-notification-banner"
-          data-queue-info={bigSaleNotifications.length > 1 ? `${currentNotificationIndex + 1}/${bigSaleNotifications.length}` : ''}
+          className={`sale-notification-banner ${isChangingNotification ? 'changing' : ''}`}
+          data-queue-info={`${currentNotificationIndex + 1}/${bigSaleNotifications.length}`}
         >
           <div className="sale-notification-content">
             <div className="sale-notification-marquee">

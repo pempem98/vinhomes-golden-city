@@ -5,6 +5,12 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const cors = require('cors');
 const { SOCKET_EVENTS, API_ENDPOINTS, DATABASE, HTTP_STATUS } = require('./constants');
+const { 
+  verifyWebhookSignature, 
+  validateApartmentData, 
+  rateLimit, 
+  securityHeaders 
+} = require('./auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,6 +30,8 @@ const io = socketIo(server, {
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(securityHeaders);
+app.use(rateLimit);
 app.use(cors({
   origin: [
     "http://localhost:3000",
@@ -34,7 +42,18 @@ app.use(cors({
   ],
   credentials: true
 }));
-app.use(express.json({ charset: 'utf-8' }));
+
+// Enhanced request logging
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const ip = req.ip || req.connection.remoteAddress;
+  console.log(`[${timestamp}] ${req.method} ${req.path} from ${ip}`);
+  next();
+});
+app.use(express.json({ 
+  charset: 'utf-8',
+  limit: '10kb' // Limit request size
+}));
 app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
 
 // Database setup
@@ -76,11 +95,12 @@ const getAllApartments = () => {
 };
 
 // API Webhook Endpoint
-app.post(API_ENDPOINTS.UPDATE_SHEET, async (req, res) => {
+app.post(API_ENDPOINTS.UPDATE_SHEET, verifyWebhookSignature, validateApartmentData, async (req, res) => {
   try {
     const { apartment_id, agency, area, price, status } = req.body;
     
-    console.log('Received update:', req.body);
+    // Safe logging without sensitive data
+    console.log(`Received authenticated update for apartment: ${apartment_id}`);
     
     // Insert or replace the apartment data
     db.run(
@@ -89,7 +109,7 @@ app.post(API_ENDPOINTS.UPDATE_SHEET, async (req, res) => {
       [apartment_id, agency, area, price, status],
       async function(err) {
         if (err) {
-          console.error('Database error:', err);
+          console.error('Database error:', err.message); // Don't log full error details
           return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Database error' });
         }
         
@@ -99,15 +119,19 @@ app.post(API_ENDPOINTS.UPDATE_SHEET, async (req, res) => {
           io.emit(SOCKET_EVENTS.APARTMENT_UPDATE, apartments);
           
           console.log(`Updated apartment ${apartment_id}, broadcasting to ${io.engine.clientsCount} clients`);
-          res.json({ success: true, message: 'Data updated successfully' });
+          res.json({ 
+            success: true, 
+            message: 'Data updated successfully',
+            timestamp: new Date().toISOString()
+          });
         } catch (fetchErr) {
-          console.error('Error fetching apartments:', fetchErr);
+          console.error('Error fetching apartments:', fetchErr.message);
           res.status(500).json({ error: 'Error fetching updated data' });
         }
       }
     );
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Server error:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -89,7 +89,7 @@ const ApartmentGrid = ({
     
     if (normalizedStatus === 'Đã bán') return 'grid-cell-sold';
     if (normalizedStatus === 'Đang lock') return 'grid-cell-locked';
-    if (normalizedStatus === 'Sẵn sàng') return 'grid-cell-available';
+    if (normalizedStatus === 'Sẵn hàng') return 'grid-cell-available';
     
     return 'grid-cell-default';
   };
@@ -172,7 +172,7 @@ const ApartmentGrid = ({
     const total = 238; // Fixed total
     const sold = apartments.filter(apt => apt.status === 'Đã bán').length;
     const locked = apartments.filter(apt => apt.status === 'Đang lock').length;
-    const available = apartments.filter(apt => apt.status === 'Sẵn sàng').length;
+    const available = apartments.filter(apt => apt.status === 'Sẵn hàng').length;
     
     return { total, sold, locked, available };
   };

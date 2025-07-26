@@ -1,3 +1,32 @@
+/* ===== REAL ESTATE DASHBOARD CSS =====
+ * 
+ * RESPONSIVE BREAKPOINTS:
+ * - Desktop: > 1200px (Full layout with side banners)
+ * - Large Tablet: 481px - 1200px (No side banners, full width)
+ * - Small Tablet: 481px - 900px (Controls stack, banner height 1.75x when wrapped)
+ * - Mobile: ≤ 480px (Compact layout, banner height 1.5x when wrapped)
+ * - Extra Small: ≤ 360px (Ultra-compact)
+ * - Mobile Landscape: height ≤ 500px
+ * 
+ * PLATFORM-SPECIFIC OPTIMIZATIONS:
+ * - iPad Portrait: 768px width (8-column grid)
+ * - iPad Landscape: 1024px width (Enhanced typography)
+ * - Mobile devices: ≤ 767px (Minimal language switcher)
+ * 
+ * SALE NOTIFICATION BANNER:
+ * - Base heights: Desktop/Tablet 50-55px, Mobile 45px
+ * - Wrapped states: Mobile 1.5x, Tablet 1.75x height increase
+ * - Smooth transitions between states
+ * 
+ * IMPORTANT USAGE GUIDELINES:
+ * - !important is used sparingly and only where necessary:
+ *   * Font-size overrides for table content (complex inheritance)
+ *   * Status-based row styling (override hover/background defaults)
+ *   * Layout changes in media queries (override desktop styles)
+ * - Grid and banner styles avoid !important where possible
+ * 
+ * ===== BASE STYLES ===== */
+
 html {
   height: 100%;
 }
@@ -91,6 +120,7 @@ body {
   color: #ffffff;
   position: relative;
   z-index: 3;
+  padding-top: 60px; /* Add padding to avoid overlap with fixed banner */
 }
 
 .dashboard-title {
@@ -392,39 +422,57 @@ body {
   min-width: 200px;
 }
 
-/* Controls responsive - center items when not enough space */
+/* ===== TABLET AND SMALL DESKTOP RESPONSIVE (max-width: 900px) ===== */
 @media (max-width: 900px) {
-  /* Table controls */
-  .table-controls {
+  /* Controls Layout - Stack vertically when space is limited */
+  .table-controls, .grid-controls {
     justify-content: center;
     flex-direction: column;
     gap: 10px;
   }
   
-  .table-stats {
+  .table-stats, .grid-stats {
     text-align: center;
     min-width: auto;
-  }
-
-  /* Grid controls */
-  .grid-controls {
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
   }
   
   .grid-controls-right {
     justify-content: center;
   }
-  
-  .grid-stats {
-    text-align: center; /* Center grid-stats on mobile */
-    min-width: auto;
+
+  /* Grid adjustments for wrapped controls */
+  .apartment-grid {
+    max-height: calc(100vh - 200px); /* Account for 2-line controls */
   }
 
-  /* Tablet responsive - grid-controls wraps to 2 lines */
-  .apartment-grid {
-    max-height: calc(100vh - 200px); /* Tablet: grid-controls 2 dòng nhưng ít padding hơn mobile */
+  /* Sale Banner - Base styling for medium screens */
+  .sale-notification-banner {
+    top: 12.5px; /* Adjusted position for medium screens */
+    height: 55px; /* Base height for tablet */
+    padding: 12px 20px;
+  }
+
+  .sale-notification-text {
+    font-size: 0.8rem; /* Giảm font size cho medium tablet */
+  }
+}
+
+/* ===== TABLET LARGE (481px - 1024px) ===== */
+@media (max-width: 1024px) and (min-width: 481px) {
+  /* Sale Banner - Base styling for large tablets */
+  .sale-notification-banner {
+    height: 75px; /* Increased height for better visibility */
+    padding: 12px 20px;
+  }
+
+  .sale-notification-text {
+    font-size: 0.8rem; /* Giảm font size cho tablet */
+    line-height: 1.4;
+  }
+
+  /* Content alignment for better UX */
+  .sale-notification-content {
+    justify-content: center;
   }
 }
 
@@ -650,7 +698,7 @@ body {
   box-sizing: border-box;
   min-height: auto;
   height: auto;
-  padding: 25px 35px auto auto;
+  padding: 0; 
   margin: -25px -25px 10px -25px;
   margin-bottom: 15px;
   border-radius: 12px;
@@ -1154,19 +1202,34 @@ body {
 
 /* Sale notification banner */
 .sale-notification-banner {
-  width: calc(100% - 40px);
-  max-width: 100%;
-  margin: 15px 20px;
-  background: linear-gradient(90deg, #ff1744, #ff6b00, #ffd600, #00e676, #2196f3, #9c27b0, #ff1744);
+  position: absolute;
+  top: 15px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(90deg, 
+    rgba(255, 23, 68, 0.95), 
+    rgba(255, 107, 0, 0.95), 
+    rgba(255, 214, 0, 0.95), 
+    rgba(0, 230, 118, 0.95), 
+    rgba(33, 150, 243, 0.95), 
+    rgba(156, 39, 176, 0.95), 
+    rgba(255, 23, 68, 0.95)
+  );
   background-size: 400% 100%;
   animation: rainbowBanner 3s linear infinite;
-  border-radius: 8px;
-  padding: 8px 15px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 0;
+  padding: 10px 20px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  position: relative;
-  z-index: 5;
+  z-index: 100;
   box-sizing: border-box;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  transition: height 0.3s ease, padding 0.3s ease; /* Smooth transition */
 }
 
 .sale-notification-content {
@@ -1174,32 +1237,34 @@ body {
   overflow: hidden;
   white-space: nowrap;
   position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Căn giữa nội dung banner */
 }
 
 .sale-notification-marquee {
   display: inline-block;
-  animation: saleMarqueeScroll 15s linear infinite;
   white-space: nowrap;
-  padding-left: 100%;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
+  text-align: center; /* Căn giữa text trong marquee */
 }
 
 .sale-notification-text {
-  font-size: 0.9rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
   color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
   transition: opacity 0.5s ease-in-out;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  margin-right: 20px; /* Khoảng cách nhỏ giữa các text */
+  display: inline-block;
 }
 
 @keyframes rainbowBanner {
   0% { background-position: 0% 0%; }
   100% { background-position: 400% 0%; }
-}
-
-@keyframes saleMarqueeScroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
 }
 
 /* Big Sale Banner Notification - Hidden by default */
@@ -1271,27 +1336,40 @@ body {
   }
 }
 
-/* Responsive for scroll containers + Hide banners for all non-desktop devices */
+/* ===== DESKTOP TO TABLET BREAKPOINT (max-width: 1200px) ===== */
 @media (max-width: 1200px) {
-  /* Hide banners */
-  .left-banner,
-  .right-banner {
+  /* Layout Changes - Hide side banners, expand main content */
+  .left-banner, .right-banner {
     display: none !important;
   }
 
-  /* Main content full width */
   .main-content {
     width: 100% !important;
     box-sizing: border-box;
     overflow: hidden;
   }
 
-  /* App container layout */
   .app-container {
-    flex-direction: row; /* Keep horizontal layout but hide banners */
+    flex-direction: row; /* Maintain horizontal layout without banners */
   }
 
-  /* Table container adjustments */
+  /* Sale Banner - Tablet optimized sizing */
+  .sale-notification-banner {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 62.5px; /* Optimized for tablet screens */
+    z-index: 100;
+    padding: 12px 20px;
+  }
+
+  .sale-notification-text {
+    font-size: 0.8rem; /* Clear readable text for tablets */
+  }
+
+  /* Container Adjustments for tablet layout */
   .apartment-table-container {
     width: 100%;
     height: calc(100vh - 90px);
@@ -1299,8 +1377,10 @@ body {
     min-height: 350px;
     padding: 15px;
     min-width: 0;
+    margin-top: 0; /* Banner is now overlay, no top margin needed */
   }
 
+  /* Scroll area optimizations */
   .table-scroll-wrapper {
     max-height: calc(100vh - 150px);
   }
@@ -1310,15 +1390,15 @@ body {
   }
 
   .apartment-grid {
-    max-height: calc(100vh - 250px); /* Điều chỉnh cho tablet vì grid-controls có thể wrap thành 2 dòng */
+    max-height: calc(100vh - 250px); /* Account for potential 2-line controls */
   }
 }
 
-/* Mobile responsive optimizations for grid and table */
+/* ===== MOBILE DEVICES (max-width: 480px) ===== */
 @media (max-width: 480px) {
-  /* Mobile layout adjustments */
+  /* Layout Changes - Force column layout for mobile */
   .app-container {
-    flex-direction: column !important; /* Force column layout on mobile */
+    flex-direction: column !important;
   }
 
   .main-content {
@@ -1327,19 +1407,20 @@ body {
     overflow: hidden;
   }
 
-  /* Reduce font sizes for mobile */
+  /* Typography - Reduced sizes for mobile screens */
   .dashboard-title {
-    font-size: 1.1rem; /* Reduce from 1.4rem to prevent wrapping */
-    white-space: nowrap; /* Prevent text wrapping */
+    font-size: 1.1rem; /* Compact title to prevent wrapping */
+    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Show ellipsis if text too long */
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .dashboard-subtitle {
     font-size: 0.85rem;
   }
 
-  /* Table mobile optimizations */
+  /* Table Optimizations for Mobile */
   .apartment-table {
     font-size: 0.6rem;
   }
@@ -1349,7 +1430,6 @@ body {
     padding: 4px 2px;
     cursor: default;
     line-height: 1.2;
-    /* Ensure ellipsis works on mobile too */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1361,7 +1441,7 @@ body {
     line-height: 1.2;
   }
 
-  /* Ensure all mobile tbody elements have consistent 0.6rem font size */
+  /* Ensure consistent font sizes for all table content */
   .apartment-table tbody td,
   .apartment-table tbody td *,
   .apartment-table tbody td .status-badge,
@@ -1377,107 +1457,103 @@ body {
     max-height: calc(100vh - 250px);
   }
 
-  /* Hide last updated column on mobile */
+  /* Hide last column on mobile to save space */
   .apartment-table th:last-child,
   .apartment-table td:last-child {
     display: none;
   }
 
-  /* Reduce table container padding */
+  /* Container Optimizations */
   .apartment-table-container {
     width: 100%;
-    height: calc(100vh - 120px); /* Giảm 10px để tối ưu */
+    height: calc(100vh - 120px);
     max-height: calc(100vh - 120px);
-    min-height: 300px; /* Tăng minimum height */
-    padding: 6px; /* Giảm padding */
+    min-height: 300px;
+    padding: 6px; /* Minimal padding for mobile */
     min-width: 0;
   }
 
-  /* Reduce stats font size */
-  .table-stats,
-  .grid-stats {
+  /* Control Elements - Smaller sizes for mobile */
+  .table-stats, .grid-stats {
     font-size: 0.7rem !important;
   }
 
-  /* Reduce view toggle button sizes */
   .view-toggle-btn {
     font-size: 0.65rem;
     padding: 4px 8px;
   }
 
-  /* Grid mobile optimizations */
+  /* Grid Optimizations for Mobile */
   .grid-cell {
-    font-size: 0.65rem; /* Increase from 0.55rem */
-    padding: 3px 2px; /* Increase padding slightly */
-    min-height: 35px; /* Increase from 30px */
-    line-height: 1.2; /* Increase line height */
+    font-size: 0.65rem;
+    padding: 3px 2px;
+    min-height: 35px;
+    line-height: 1.2;
   }
 
   .grid-cell .apartment-id {
-    font-size: 0.7rem; /* Increase from 0.6rem */
+    font-size: 0.7rem;
     font-weight: bold;
   }
 
   .grid-cell .agency-short {
-    font-size: 0.6rem; /* Increase from 0.5rem */
+    font-size: 0.6rem;
     margin-top: 1px;
   }
 
   .apartment-grid {
-    max-height: calc(100vh - 235px); /* Mobile: grid-controls 2 dòng + header + padding */
+    max-height: calc(100vh - 235px); /* Account for 2-line controls + header */
     padding: 5px 2px auto 2px;
     margin: 0;
     margin-bottom: 10px;
-    /* Force 7 columns on mobile */
-    display: grid !important;
-    grid-template-columns: repeat(7, 1fr) !important;
-    gap: 2px !important;
+    /* Force 7 columns on mobile for optimal viewing */
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
     grid-auto-rows: auto;
   }
 
-  /* Hide column slider on mobile */
+  /* Hide column slider on mobile - not needed */
   .column-slider-container {
     display: none;
   }
 
-  /* Reduce notification banner size */
+  /* Sale Banner - Mobile optimized */
   .sale-notification-banner {
-    height: 35px;
-    font-size: 0.75rem;
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 55px; /* Compact height for mobile */
+    padding: 8px 15px;
   }
 
   .sale-notification-text {
-    font-size: 0.75rem;
+    font-size: 0.5rem; /* Giảm một nửa font size cho mobile */
   }
 
-  /* Reduce current time font size */
+  /* Other UI Elements */
   .current-time {
     font-size: 0.7rem;
   }
 
-  /* Adjust loading container */
   .loading-container {
     font-size: 0.8rem;
   }
 
-  /* Dashboard header mobile optimization */
+  /* Header Adjustments */
   .dashboard-header {
-    margin-bottom: 20px; /* Reduce margin */
-  }
-  
-  .dashboard-title {
-    font-size: 1.1rem; /* Smaller font to fit one line */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%; /* Ensure it fits container */
+    margin-bottom: 20px;
+    padding-top: 50px; /* Account for mobile banner */
   }
 }
 
-/* Extra small mobile devices (max-width: 360px) */
+/* ===== EXTRA SMALL MOBILE DEVICES (max-width: 360px) ===== */
 @media (max-width: 360px) {
+  /* Ultra-compact layout for very small screens */
   .apartment-table-container {
-    height: calc(100vh - 110px); /* Tối ưu cho màn hình rất nhỏ */
+    height: calc(100vh - 110px);
     min-height: 280px;
     padding: 4px;
   }
@@ -1488,10 +1564,11 @@ body {
   }
 }
 
-/* Small mobile landscape (max-height: 500px) */
+/* ===== MOBILE LANDSCAPE MODE (max-height: 500px) ===== */
 @media (max-height: 500px) {
+  /* Optimizations for landscape orientation on mobile */
   .apartment-table-container {
-    height: calc(100vh - 90px); /* Landscape mode */
+    height: calc(100vh - 90px);
     min-height: 200px;
   }
   
@@ -1505,13 +1582,13 @@ body {
   }
   
   .dashboard-subtitle {
-    display: none; /* Ẩn subtitle ở landscape */
+    display: none; /* Hide subtitle in landscape to save space */
   }
 }
 
-/* iPad responsive optimizations (768x1024) */
+/* ===== IPAD DEVICES (768px - 1024px) ===== */
 @media (min-width: 768px) and (max-width: 1024px) {
-  /* iPad Portrait & Landscape optimizations */
+  /* Typography - Balanced sizing for iPad screens */
   .dashboard-title {
     font-size: 1.8rem; /* Larger than mobile, smaller than desktop */
     white-space: normal; /* Allow wrapping on iPad */
@@ -1522,7 +1599,7 @@ body {
     font-size: 1rem;
   }
 
-  /* Table optimizations for iPad */
+  /* Table Optimizations for iPad */
   .apartment-table th {
     font-size: 0.9rem;
     padding: 12px 8px;
@@ -1533,6 +1610,7 @@ body {
     padding: 8px 6px;
   }
 
+  /* Consistent font sizing for all table content */
   .apartment-table tbody td,
   .apartment-table tbody td *,
   .apartment-table tbody td .status-badge,
@@ -1544,14 +1622,14 @@ body {
     font-size: 0.75rem !important;
   }
 
-  /* Grid optimizations for iPad */
+  /* Grid Optimizations for iPad */
   .grid-cell {
     font-size: 0.55rem;
     padding: 5px 3px;
     min-height: 40px;
   }
 
-  /* Table container for iPad */
+  /* Container Sizing for iPad */
   .apartment-table-container {
     height: calc(100vh - 100px);
     max-height: calc(100vh - 100px);
@@ -1568,9 +1646,8 @@ body {
     padding: 10px 10px;
   }
 
-  /* Controls optimizations */
-  .table-stats,
-  .grid-stats {
+  /* Control Elements for iPad */
+  .table-stats, .grid-stats {
     font-size: 0.85rem;
   }
 
@@ -1579,12 +1656,12 @@ body {
     padding: 6px 10px;
   }
 
-  /* Show column slider on iPad */
+  /* Show column slider on iPad - useful for larger screens */
   .column-slider-container {
     display: flex !important;
   }
 
-  /* Language switcher for iPad */
+  /* Language Switcher for iPad */
   .language-switcher {
     opacity: 0.7;
     padding: 3px;
@@ -1598,31 +1675,31 @@ body {
   }
 }
 
-/* iPad Portrait specific (768px width) */
+/* ===== IPAD PORTRAIT SPECIFIC (768px width) ===== */
 @media (width: 768px) and (orientation: portrait) {
   .apartment-grid {
-    /* Force 8 columns for iPad portrait */
-    display: grid !important;
-    grid-template-columns: repeat(8, 1fr) !important;
-    gap: 3px !important;
+    /* Optimized 8-column layout for iPad portrait */
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
   }
 
   .grid-controls {
-    flex-direction: row; /* Keep horizontal layout */
+    flex-direction: row; /* Maintain horizontal layout */
     justify-content: space-between;
   }
 
   .grid-stats {
-    text-align: left; /* Left align for better UX */
+    text-align: left; /* Better UX alignment */
   }
 }
 
-/* iPad Landscape specific (1024px width) */
+/* ===== IPAD LANDSCAPE SPECIFIC (1024px width) ===== */
 @media (width: 1024px) and (orientation: landscape) {
   .apartment-grid {
-    /* Use dynamic columns for iPad landscape */
-    display: grid !important;
-    gap: 4px !important;
+    /* Dynamic column layout for iPad landscape */
+    display: grid;
+    gap: 4px;
   }
 
   .grid-controls {
@@ -1634,7 +1711,7 @@ body {
     text-align: left;
   }
 
-  /* Larger fonts for landscape */
+  /* Enhanced typography for landscape mode */
   .dashboard-title {
     font-size: 2rem;
   }
@@ -1649,6 +1726,7 @@ body {
     padding: 10px 8px;
   }
 
+  /* Consistent font sizing for landscape */
   .apartment-table tbody td,
   .apartment-table tbody td *,
   .apartment-table tbody td .status-badge,
@@ -1661,7 +1739,9 @@ body {
   }
 }
 
-/* Disable hover effects for thead on all devices */
+/* ===== TABLE INTERACTION OPTIMIZATIONS ===== */
+
+/* Disable hover effects for table headers on all devices */
 .apartment-table thead,
 .apartment-table thead *,
 .apartment-table th,
@@ -1684,14 +1764,14 @@ body {
   box-shadow: none !important;
 }
 
-/* Allow Agency and Last Updated columns to wrap text */
+/* Allow text wrapping for Agency and Last Updated columns */
 .apartment-table td:nth-child(2),
 .apartment-table td:nth-child(6) {
   white-space: normal;
   word-wrap: break-word;
 }
 
-/* Status column styling */
+/* Status badge styling */
 .apartment-table td .status-badge {
   padding: 2px 6px;
   border-radius: 4px;
@@ -1701,26 +1781,27 @@ body {
   min-width: 60px;
 }
 
+/* ===== LAYOUT OPTIMIZATIONS ===== */
+
 /* Table layout improvements */
 .apartment-table-container .table-scroll-wrapper {
-  /* Remove any conflicting scroll settings */
   overflow: visible;
   max-height: none;
 }
 
-/* Ensure proper table spacing */
+/* Ensure proper table cell alignment */
 .apartment-table tr td {
   vertical-align: middle;
 }
 
-/* Language switcher responsive - mobile only (not iPad) */
+/* ===== LANGUAGE SWITCHER - MOBILE SPECIFIC (max-width: 767px) ===== */
 @media (max-width: 767px) {
   .language-switcher {
     top: 10px;
-    left: 10px; /* Keep on left for mobile too */
+    left: 10px;
     padding: 1px;
     gap: 1px;
-    opacity: 0.5; /* Even more subtle on mobile */
+    opacity: 0.5; /* Subtle appearance on mobile */
   }
   
   .lang-btn {
@@ -1733,6 +1814,34 @@ body {
   .language-switcher:hover {
     opacity: 0.8;
   }
+}
+
+/* ===== SALE NOTIFICATION BANNER - ANIMATIONS & TRANSITIONS ===== */
+
+/* Fade transition for notification queue changes */
+.sale-notification-banner.changing {
+  animation: fadeNotification 1s ease-in-out;
+}
+
+@keyframes fadeNotification {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Fade transition for queue notifications */
+.sale-notification-marquee {
+  transition: opacity 0.5s ease-in-out;
+}
+
+.sale-notification-banner.changing .sale-notification-marquee {
+  opacity: 0.7;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 0.8; transform: translateX(0); }
 }
 
 

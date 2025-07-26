@@ -17,7 +17,7 @@ function getAgencyShortName(agencyName) {
     'Tân Thời Đại': 'TTĐ',
     'Trường Phát Land': 'TPL',
     'Thiên Phúc Group': 'TPG',
-    'Thành Phát Land': 'TḾL',
+    'Thành Phát Land': 'TML',
     'Tân Long': 'TL',
     'Tân Hương Phát': 'THP',
     'Southern Homes': 'SH',
@@ -83,7 +83,7 @@ function generateApartments(count = 150) {
     'Five Star', 'Eternity Group', 'Đông Tây Land', 'Đông Đô Land', 'Đất Việt',
     'BigHomes Group', 'ATD Homes', 'An Holding', 'AHS', 'One Housing'
   ];
-  const statuses = ['Sẵn sàng', 'Đang lock', 'Đã bán'];
+  const statuses = ['Sẵn hàng', 'Đang lock', 'Đã bán'];
   
   const apartments = [];
   const usedIds = new Set();
@@ -146,7 +146,7 @@ function generateApartments(count = 150) {
     // Status distribution: 60% available, 25% locked, 15% sold
     let status;
     const statusRand = Math.random();
-    if (statusRand < 0.6) status = 'Sẵn sàng';
+    if (statusRand < 0.6) status = 'Sẵn hàng';
     else if (statusRand < 0.85) status = 'Đang lock';
     else status = 'Đã bán';
     
@@ -299,7 +299,7 @@ db.run(createTableSQL, (err) => {
               console.error('❌ Error getting summary:', err.message);
             } else {
               rows.forEach(row => {
-                const emoji = row.status === 'Sẵn sàng' ? '🟢' : 
+                const emoji = row.status === 'Sẵn hàng' ? '🟢' : 
                              row.status === 'Đã bán' ? '🔴' : '🟡';
                 console.log(`${emoji} ${row.status}: ${row.count} apartments`);
               });

@@ -2,13 +2,13 @@
 export const STATUS_TYPES = {
   SOLD: 'Đã bán',
   LOCKED: 'Đang lock',
-  AVAILABLE: 'Sẵn sàng'
+  AVAILABLE: 'Sẵn hàng'
 };
 
 export const STATUS_CLASSES = {
   'Đã bán': 'status-sold',
   'Đang lock': 'status-locked',
-  'Sẵn sàng': 'status-available',
+  'Sẵn hàng': 'status-available',
   '-': 'status-available'
 };
 
