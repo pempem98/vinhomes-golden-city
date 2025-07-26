@@ -190,6 +190,10 @@ body {
   z-index: 11;
   cursor: default;
   user-select: none;
+  /* Disable text wrapping and show ellipsis */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .apartment-table th::after {
@@ -213,7 +217,7 @@ body {
   font-size: 0.8rem; /* Standardize font size for all td content */
 }
 
-/* Ensure all text elements in tbody have consistent font size */
+/* Standardize table content font sizes */
 .apartment-table tbody td,
 .apartment-table tbody td *,
 .apartment-table tbody td .status-badge,
@@ -225,29 +229,48 @@ body {
   font-size: 0.8rem !important;
 }
 
-/* Allow Agency and Last Updated columns to wrap text */
-.apartment-table td:nth-child(2),
-.apartment-table td:nth-child(6) {
-  white-space: normal;
-  word-wrap: break-word;
-}
-
-/* Status column styling */
-.apartment-table td .status-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-align: center;
-  display: inline-block;
-  min-width: 60px;
-}
-
-/* Price formatting */
 .apartment-table td .price-display {
   font-weight: bold;
   color: #ffffff;
-  font-size: 0.8rem; /* Standardize font size */
+}
+
+.apartment-table td .agency-name {
+  opacity: 0.9;
+}
+
+.apartment-table td .time-display {
+  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.apartment-table th:nth-child(1),
+.apartment-table td:nth-child(1) {
+  width: 22.22%; /* 2 / 9 * 100% */
+}
+
+.apartment-table th:nth-child(2),
+.apartment-table td:nth-child(2) {
+  width: 19.44%; /* 1.75 / 9 * 100% */
+}
+
+.apartment-table th:nth-child(3),
+.apartment-table td:nth-child(3) {
+  width: 13.89%; /* 1.25 / 9 * 100% */
+}
+
+.apartment-table th:nth-child(4),
+.apartment-table td:nth-child(4) {
+  width: 11.11%; /* 1 / 9 * 100% */
+}
+
+.apartment-table th:nth-child(5),
+.apartment-table td:nth-child(5) {
+  width: 16.67%; /* 1.5 / 9 * 100% */
+}
+
+.apartment-table th:nth-child(6),
+.apartment-table td:nth-child(6) {
+  width: 22.22%; /* 2 / 9 * 100% */
 }
 
 .apartment-table tr {
@@ -369,8 +392,9 @@ body {
   min-width: 200px;
 }
 
-/* Table controls responsive */
+/* Controls responsive - center items when not enough space */
 @media (max-width: 900px) {
+  /* Table controls */
   .table-controls {
     justify-content: center;
     flex-direction: column;
@@ -380,6 +404,27 @@ body {
   .table-stats {
     text-align: center;
     min-width: auto;
+  }
+
+  /* Grid controls */
+  .grid-controls {
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .grid-controls-right {
+    justify-content: center;
+  }
+  
+  .grid-stats {
+    text-align: center; /* Center grid-stats on mobile */
+    min-width: auto;
+  }
+
+  /* Tablet responsive - grid-controls wraps to 2 lines */
+  .apartment-grid {
+    max-height: calc(100vh - 200px); /* Tablet: grid-controls 2 dòng nhưng ít padding hơn mobile */
   }
 }
 
@@ -605,7 +650,7 @@ body {
   box-sizing: border-box;
   min-height: auto;
   height: auto;
-  padding: 25px 35px 25px 35px;
+  padding: 25px 35px auto auto;
   margin: -25px -25px 10px -25px;
   margin-bottom: 15px;
   border-radius: 12px;
@@ -1226,13 +1271,27 @@ body {
   }
 }
 
-/* Responsive for scroll containers */
+/* Responsive for scroll containers + Hide banners for all non-desktop devices */
 @media (max-width: 1200px) {
+  /* Hide banners */
+  .left-banner,
+  .right-banner {
+    display: none !important;
+  }
+
+  /* Main content full width */
   .main-content {
+    width: 100% !important;
     box-sizing: border-box;
     overflow: hidden;
   }
 
+  /* App container layout */
+  .app-container {
+    flex-direction: row; /* Keep horizontal layout but hide banners */
+  }
+
+  /* Table container adjustments */
   .apartment-table-container {
     width: 100%;
     height: calc(100vh - 90px);
@@ -1246,29 +1305,26 @@ body {
     max-height: calc(100vh - 150px);
   }
 
+  .apartment-table {
+    max-height: calc(100vh - 225px);
+  }
+
   .apartment-grid {
-    max-height: calc(100vh - 150px);
+    max-height: calc(100vh - 250px); /* Điều chỉnh cho tablet vì grid-controls có thể wrap thành 2 dòng */
   }
 }
 
 /* Mobile responsive optimizations for grid and table */
 @media (max-width: 480px) {
-  /* Hide banners on mobile */
-  .left-banner,
-  .right-banner {
-    display: none !important;
+  /* Mobile layout adjustments */
+  .app-container {
+    flex-direction: column !important; /* Force column layout on mobile */
   }
 
-  /* Make main content full width */
   .main-content {
     width: 100% !important;
     box-sizing: border-box;
     overflow: hidden;
-  }
-
-  /* Ensure app container adapts */
-  .app-container {
-    flex-direction: column;
   }
 
   /* Reduce font sizes for mobile */
@@ -1293,6 +1349,10 @@ body {
     padding: 4px 2px;
     cursor: default;
     line-height: 1.2;
+    /* Ensure ellipsis works on mobile too */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .apartment-table td {
@@ -1314,7 +1374,7 @@ body {
   }
 
   .apartment-table tbody {
-    max-height: calc(100vh - 195px);
+    max-height: calc(100vh - 250px);
   }
 
   /* Hide last updated column on mobile */
@@ -1326,10 +1386,10 @@ body {
   /* Reduce table container padding */
   .apartment-table-container {
     width: 100%;
-    height: calc(100vh - 130px);
-    max-height: calc(100vh - 130px);
-    min-height: 350px;
-    padding: 8px;
+    height: calc(100vh - 120px); /* Giảm 10px để tối ưu */
+    max-height: calc(100vh - 120px);
+    min-height: 300px; /* Tăng minimum height */
+    padding: 6px; /* Giảm padding */
     min-width: 0;
   }
 
@@ -1364,8 +1424,8 @@ body {
   }
 
   .apartment-grid {
-    max-height: calc(100vh - 195px);
-    padding: 5px 2px 10px 2px;
+    max-height: calc(100vh - 235px); /* Mobile: grid-controls 2 dòng + header + padding */
+    padding: 5px 2px auto 2px;
     margin: 0;
     margin-bottom: 10px;
     /* Force 7 columns on mobile */
@@ -1414,15 +1474,190 @@ body {
   }
 }
 
-/* Tablet responsive - hide banners */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .left-banner,
-  .right-banner {
-    display: none !important;
+/* Extra small mobile devices (max-width: 360px) */
+@media (max-width: 360px) {
+  .apartment-table-container {
+    height: calc(100vh - 110px); /* Tối ưu cho màn hình rất nhỏ */
+    min-height: 280px;
+    padding: 4px;
   }
   
-  .main-content {
-    width: 100% !important;
+  .apartment-table tbody {
+    max-height: calc(100vh - 170px);
+    min-height: 220px;
+  }
+}
+
+/* Small mobile landscape (max-height: 500px) */
+@media (max-height: 500px) {
+  .apartment-table-container {
+    height: calc(100vh - 90px); /* Landscape mode */
+    min-height: 200px;
+  }
+  
+  .apartment-table tbody {
+    max-height: calc(100vh - 140px);
+    min-height: 150px;
+  }
+  
+  .dashboard-title {
+    font-size: 1rem;
+  }
+  
+  .dashboard-subtitle {
+    display: none; /* Ẩn subtitle ở landscape */
+  }
+}
+
+/* iPad responsive optimizations (768x1024) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* iPad Portrait & Landscape optimizations */
+  .dashboard-title {
+    font-size: 1.8rem; /* Larger than mobile, smaller than desktop */
+    white-space: normal; /* Allow wrapping on iPad */
+    line-height: 1.2;
+  }
+
+  .dashboard-subtitle {
+    font-size: 1rem;
+  }
+
+  /* Table optimizations for iPad */
+  .apartment-table th {
+    font-size: 0.9rem;
+    padding: 12px 8px;
+  }
+
+  .apartment-table td {
+    font-size: 0.75rem;
+    padding: 8px 6px;
+  }
+
+  .apartment-table tbody td,
+  .apartment-table tbody td *,
+  .apartment-table tbody td .status-badge,
+  .apartment-table tbody td .price-display,
+  .apartment-table tbody td .agency-name,
+  .apartment-table tbody td .time-display,
+  .apartment-table tbody td span,
+  .apartment-table tbody td div {
+    font-size: 0.75rem !important;
+  }
+
+  /* Grid optimizations for iPad */
+  .grid-cell {
+    font-size: 0.55rem;
+    padding: 5px 3px;
+    min-height: 40px;
+  }
+
+  /* Table container for iPad */
+  .apartment-table-container {
+    height: calc(100vh - 100px);
+    max-height: calc(100vh - 100px);
+    min-height: 400px;
+    padding: 12px;
+  }
+
+  .apartment-table tbody {
+    max-height: calc(100vh - 225px);
+  }
+
+  .apartment-grid {
+    max-height: calc(100vh - 225px);
+    padding: 10px 10px;
+  }
+
+  /* Controls optimizations */
+  .table-stats,
+  .grid-stats {
+    font-size: 0.85rem;
+  }
+
+  .view-toggle-btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  /* Show column slider on iPad */
+  .column-slider-container {
+    display: flex !important;
+  }
+
+  /* Language switcher for iPad */
+  .language-switcher {
+    opacity: 0.7;
+    padding: 3px;
+  }
+  
+  .lang-btn {
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    padding: 4px 6px;
+  }
+}
+
+/* iPad Portrait specific (768px width) */
+@media (width: 768px) and (orientation: portrait) {
+  .apartment-grid {
+    /* Force 8 columns for iPad portrait */
+    display: grid !important;
+    grid-template-columns: repeat(8, 1fr) !important;
+    gap: 3px !important;
+  }
+
+  .grid-controls {
+    flex-direction: row; /* Keep horizontal layout */
+    justify-content: space-between;
+  }
+
+  .grid-stats {
+    text-align: left; /* Left align for better UX */
+  }
+}
+
+/* iPad Landscape specific (1024px width) */
+@media (width: 1024px) and (orientation: landscape) {
+  .apartment-grid {
+    /* Use dynamic columns for iPad landscape */
+    display: grid !important;
+    gap: 4px !important;
+  }
+
+  .grid-controls {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .grid-stats {
+    text-align: left;
+  }
+
+  /* Larger fonts for landscape */
+  .dashboard-title {
+    font-size: 2rem;
+  }
+
+  .apartment-table th {
+    font-size: 1rem;
+    padding: 15px 10px;
+  }
+
+  .apartment-table td {
+    font-size: 0.8rem;
+    padding: 10px 8px;
+  }
+
+  .apartment-table tbody td,
+  .apartment-table tbody td *,
+  .apartment-table tbody td .status-badge,
+  .apartment-table tbody td .price-display,
+  .apartment-table tbody td .agency-name,
+  .apartment-table tbody td .time-display,
+  .apartment-table tbody td span,
+  .apartment-table tbody td div {
+    font-size: 0.8rem !important;
   }
 }
 
@@ -1449,6 +1684,23 @@ body {
   box-shadow: none !important;
 }
 
+/* Allow Agency and Last Updated columns to wrap text */
+.apartment-table td:nth-child(2),
+.apartment-table td:nth-child(6) {
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+/* Status column styling */
+.apartment-table td .status-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-align: center;
+  display: inline-block;
+  min-width: 60px;
+}
+
 /* Table layout improvements */
 .apartment-table-container .table-scroll-wrapper {
   /* Remove any conflicting scroll settings */
@@ -1461,37 +1713,8 @@ body {
   vertical-align: middle;
 }
 
-/* Status column styling */
-.apartment-table td .status-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  text-align: center;
-  display: inline-block;
-  min-width: 60px;
-}
-
-/* Price formatting */
-.apartment-table td .price-display {
-  font-weight: bold;
-  color: #ffffff;
-  font-size: 0.8rem; /* Standardize font size */
-}
-
-.apartment-table td .agency-name {
-  font-size: 0.8rem; /* Standardize font size */
-  opacity: 0.9;
-}
-
-.apartment-table td .time-display {
-  font-size: 0.8rem; /* Standardize font size */
-  opacity: 0.8;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Language switcher responsive */
-@media (max-width: 768px) {
+/* Language switcher responsive - mobile only (not iPad) */
+@media (max-width: 767px) {
   .language-switcher {
     top: 10px;
     left: 10px; /* Keep on left for mobile too */
@@ -1512,20 +1735,4 @@ body {
   }
 }
 
-/* Grid controls responsive - center items when not enough space */
-@media (max-width: 900px) {
-  .grid-controls {
-    justify-content: center;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .grid-controls-right {
-    justify-content: center;
-  }
-  
-  .grid-stats {
-    text-align: center; /* Center grid-stats on mobile */
-    min-width: auto;
-  }
-}
+
