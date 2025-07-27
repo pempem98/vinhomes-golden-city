@@ -1,0 +1,104 @@
+services:
+  # Database service (SQLite runs in backend, but we could extend to PostgreSQL)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: real-estate-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - HMAC_SECRET=${HMAC_SECRET}
+      - API_SECRET=${API_SECRET}
+      - DATABASE_PATH=/app/database.sqlite
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ./backend/database.sqlite:/app/database.sqlite
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - real-estate-network
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+      - /app/logs
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: real-estate-frontend
+    restart: unless-stopped
+    environment:
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:5000}
+      - REACT_APP_ENV=production
+    ports:
+      - "6868:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - real-estate-network
+    security_opt:
+      - no-new-privileges:true
+
+  # Optional: Add monitoring with Watchtower for auto-updates
+  watchtower:
+    image: containrrr/watchtower
+    container_name: real-estate-watchtower
+    restart: unless-stopped
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=3600
+      - WATCHTOWER_INCLUDE_STOPPED=true
+      - WATCHTOWER_REVIVE_STOPPED=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - real-estate-network
+    profiles:
+      - monitoring
+
+  # Optional: Add reverse proxy with SSL
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: real-estate-proxy
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - real-estate-network
+    profiles:
+      - proxy
+
+# No named volumes needed - using tmpfs for logs
+
+networks:
+  real-estate-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

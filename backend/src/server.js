@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -14,15 +15,21 @@ const {
 
 const app = express();
 const server = http.createServer(app);
+
+// Configure allowed origins from environment
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+const allowedOrigins = [
+  frontendUrl,
+  "http://localhost:3000", 
+  "http://192.168.31.205:3000",
+  /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
+  /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
+  /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000
+];
+
 const io = socketIo(server, {
   cors: {
-    origin: [
-      "http://localhost:3000", 
-      "http://192.168.31.205:3000",
-      /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
-      /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
-      /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
@@ -33,13 +40,7 @@ const PORT = process.env.PORT || 5000;
 app.use(securityHeaders);
 app.use(rateLimit);
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://192.168.31.205:3000",
-    /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
-    /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
-    /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 
@@ -57,7 +58,7 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
 
 // Database setup
-const dbPath = path.join(__dirname, '..', 'database.sqlite');
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
 // Set SQLite to use UTF-8 encoding

@@ -48,6 +48,11 @@ echo.
 echo ⚙️ Setting up environment files...
 cd ..
 
+if not exist ".env" (
+    copy ".env.example" ".env"
+    echo ✅ Root .env file created
+)
+
 if not exist "backend\.env" (
     copy "backend\.env.example" "backend\.env"
     echo ✅ Backend .env file created
@@ -61,12 +66,20 @@ if not exist "frontend\.env" (
 echo.
 echo 🎉 Setup completed successfully!
 echo.
-echo Next steps:
-echo 1. Add your background image to frontend/public/background.jpg
-echo 2. Set up your Google Apps Script with the code from google-apps-script/onEditTrigger.gs
-echo 3. Update the WEBHOOK_URL in the Google Apps Script
-echo 4. Start the backend: cd backend ^&^& npm run dev
-echo 5. Start the frontend: cd frontend ^&^& npm start
+echo ⚠️ IMPORTANT SECURITY NOTES:
+echo 1. Update HMAC_SECRET and API_SECRET in your .env files with strong, unique secrets
+echo 2. Never commit .env files to version control
+echo 3. Use different secrets for development and production environments
 echo.
-echo 📖 Read the README.md file for detailed instructions
+echo Next steps:
+echo 1. Edit .env, backend\.env, and frontend\.env files with your actual configuration
+echo 2. Add your background image to frontend/public/background.jpg
+echo 3. Set up your Google Apps Script with the secure code from google-apps-script/onEditTrigger-secure.gs
+echo 4. Update the WEBHOOK_URL in the Google Apps Script to match your backend URL
+echo 5. Initialize the database: cd scripts ^&^& npm install ^&^& npm run init-database
+echo 6. Start the backend: cd backend ^&^& npm run dev
+echo 7. Start the frontend: cd frontend ^&^& npm start
+echo.
+echo 📖 Read the README.md and SECURITY.md files for detailed instructions
+echo 🐳 For production deployment, see Docker configuration files and setup-ec2.sh
 pause
