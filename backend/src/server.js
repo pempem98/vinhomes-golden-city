@@ -20,8 +20,10 @@ const server = http.createServer(app);
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 const allowedOrigins = [
   frontendUrl,
-  "http://localhost:3000", 
+  "http://localhost:3000",
+  "http://localhost:6868", 
   "http://192.168.31.205:3000",
+  "https://vinhomes-golden-city.real-estate.io.vn", // Production domain
   /^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 192.168.x.x:3000
   /^http:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}:3000$/, // Allow any 10.x.x.x:3000
   /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}:3000$/ // Allow 172.16-31.x.x:3000

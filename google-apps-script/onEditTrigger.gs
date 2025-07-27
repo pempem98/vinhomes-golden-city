@@ -4,8 +4,8 @@
  */
 
 // Replace with your actual backend URL and secret key
-const WEBHOOK_URL = 'https://your-backend-url.com/api/update-sheet';
-const WEBHOOK_SECRET = 'your-secret-key-here-change-this'; // Must match backend
+const WEBHOOK_URL = 'http://your-ec2-ip:5000/api/update-sheet';
+const WEBHOOK_SECRET = 'your-api-secret-from-env-file'; // Must match API_SECRET in backend .env
 
 /**
  * Generate HMAC signature for webhook security
@@ -18,7 +18,11 @@ function generateSignature(timestamp, payload) {
     WEBHOOK_SECRET,
     Utilities.Charset.UTF_8
   );
-  return Utilities.base64Encode(signature);
+  // Convert to hex format (backend expects hex, not base64)
+  return signature.reduce((str, chr) => {
+    chr = (chr < 0 ? chr + 256 : chr).toString(16);
+    return str + (chr.length == 1 ? '0' : '') + chr;
+  }, '');
 }
 
 /**
