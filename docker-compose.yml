@@ -16,6 +16,11 @@ services:
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # CORS & IP Access Control
+      - ALLOW_ALL_ORIGINS=${ALLOW_ALL_ORIGINS:-false}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:6868}
+      - ALLOW_ALL_IPS=${ALLOW_ALL_IPS:-false}
+      - ALLOWED_IPS=${ALLOWED_IPS:-127.0.0.1,::1}
     volumes:
       - ./backend/database.sqlite:/app/database.sqlite
       - /app/node_modules

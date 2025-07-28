@@ -45,6 +45,15 @@ Một ứng dụng dashboard thời gian thực để quản lý thông tin căn
 
 ## Getting Started
 
+### 📋 **Environment Setup**
+
+**Development-ready `.env` files are included in the repository for quick setup:**
+- `backend/.env` - Backend development configuration
+- `frontend/.env` - Frontend development configuration  
+- `.env.example` - Template with all available options
+
+**⚠️ For production**: Copy `.env.example` to `.env` and update with secure values!
+
 ### 1. Backend Setup
 
 Navigate to the backend directory and install dependencies:
@@ -62,7 +71,7 @@ npm run dev  # For development with nodemon
 npm start    # For production
 ```
 
-The server will start on port 5000 (or the port specified in the PORT environment variable).
+The server will start on port 6867 (configurable via PORT in .env).
 
 ### 2. Frontend Setup
 

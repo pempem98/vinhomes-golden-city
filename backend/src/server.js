@@ -16,15 +16,31 @@ const {
 const app = express();
 const server = http.createServer(app);
 
-// Configure allowed origins from environment
+// Configure CORS and allowed origins from environment
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:6868";
-const allowedOrigins = [
-  frontendUrl,
-  "http://localhost:3000",
-  "http://localhost:6868", 
-  /^http:\/\/.*/, // Allow all IPs and ports temporarily
-  /^https:\/\/.*/ // Allow all HTTPS
-];
+const allowAllOrigins = process.env.ALLOW_ALL_ORIGINS === 'true';
+const allowAllIPs = process.env.ALLOW_ALL_IPS === 'true';
+
+let allowedOrigins;
+if (allowAllOrigins) {
+  // Allow all origins (USE WITH CAUTION IN PRODUCTION)
+  allowedOrigins = true;
+} else {
+  // Use specific origins from env or defaults
+  const corsOrigins = process.env.CORS_ORIGINS || `${frontendUrl},http://localhost:3000,http://localhost:6868`;
+  allowedOrigins = corsOrigins.split(',').map(origin => origin.trim());
+}
+
+// Configure allowed IPs
+let allowedIPs;
+if (allowAllIPs) {
+  // Allow all IPs (USE WITH CAUTION IN PRODUCTION)
+  allowedIPs = [/^.*$/]; // Match any IP
+} else {
+  // Use specific IPs from env or defaults
+  const configuredIPs = process.env.ALLOWED_IPS || "127.0.0.1,::1";
+  allowedIPs = configuredIPs.split(',').map(ip => ip.trim());
+}
 
 const io = socketIo(server, {
   cors: {
@@ -42,9 +58,36 @@ server.timeout = 30000;
 // Port configuration
 const PORT = process.env.PORT || 6867;
 
+// IP Access Control Middleware
+const ipAccessControl = (req, res, next) => {
+  if (allowAllIPs) {
+    return next(); // Allow all IPs
+  }
+  
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  const forwardedIP = req.headers['x-forwarded-for'];
+  const realIP = forwardedIP ? forwardedIP.split(',')[0].trim() : clientIP;
+  
+  // Check if IP is in allowed list
+  const isAllowed = allowedIPs.some(allowedIP => {
+    if (allowedIP instanceof RegExp) {
+      return allowedIP.test(realIP);
+    }
+    return allowedIP === realIP || realIP.includes(allowedIP);
+  });
+  
+  if (!isAllowed) {
+    console.warn(`🚫 Access denied from IP: ${realIP}`);
+    return res.status(403).json({ error: 'Access denied from this IP address' });
+  }
+  
+  next();
+};
+
 // Middleware
 app.use(securityHeaders);
 app.use(rateLimit);
+app.use(ipAccessControl); // Apply IP access control
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
@@ -166,5 +209,26 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🔌 WebSocket server ready for connections`);
   console.log(`🔑 Webhook Secret: ${process.env.WEBHOOK_SECRET || 'default-secret-key'}`);
   console.log(`🎯 Frontend URL: ${frontendUrl}`);
-  console.log(`✅ CORS: All origins allowed (development mode)`);
+  
+  // CORS Configuration Display
+  if (allowAllOrigins) {
+    console.log(`✅ CORS: All origins allowed (*) - ${process.env.NODE_ENV === 'production' ? '⚠️  PRODUCTION MODE' : 'Development mode'}`);
+  } else {
+    console.log(`🔒 CORS: Restricted to specific origins`);
+    console.log(`   Origins: ${allowedOrigins.join(', ')}`);
+  }
+  
+  // IP Access Control Display  
+  if (allowAllIPs) {
+    console.log(`🌍 IP Access: All IPs allowed (*) - ${process.env.NODE_ENV === 'production' ? '⚠️  PRODUCTION MODE' : 'Development mode'}`);
+  } else {
+    console.log(`🔐 IP Access: Restricted to specific IPs`);
+    console.log(`   Allowed IPs: ${allowedIPs.join(', ')}`);
+  }
+  
+  // Security Warning for Production
+  if (process.env.NODE_ENV === 'production' && (allowAllOrigins || allowAllIPs)) {
+    console.log(`⚠️  WARNING: Production mode with open access policies detected!`);
+    console.log(`   Consider restricting CORS and IP access for security.`);
+  }
 });
