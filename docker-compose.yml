@@ -12,14 +12,14 @@ services:
       - HMAC_SECRET=${HMAC_SECRET}
       - API_SECRET=${API_SECRET}
       - DATABASE_PATH=/app/database.sqlite
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:6868}
+      - FRONTEND_URL=${FRONTEND_URL:-https://vinhomes-golden-city.real-estate.io.vn}
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       # CORS & IP Access Control
       - ALLOW_ALL_ORIGINS=${ALLOW_ALL_ORIGINS:-false}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:6868}
-      - ALLOW_ALL_IPS=${ALLOW_ALL_IPS:-false}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://vinhomes-golden-city.real-estate.io.vn}
+      - ALLOW_ALL_IPS=${ALLOW_ALL_IPS:-true}
       - ALLOWED_IPS=${ALLOWED_IPS:-127.0.0.1,::1}
     volumes:
       - ./backend/database.sqlite:/app/database.sqlite
@@ -36,6 +36,7 @@ services:
       - vinhomes-golden-city-network
     security_opt:
       - no-new-privileges:true
+    user: root
     tmpfs:
       - /tmp
       - /app/logs
@@ -47,7 +48,7 @@ services:
     container_name: vinhomes-golden-city-frontend
     restart: unless-stopped
     environment:
-      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:6867}
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-https://vinhomes-golden-city.real-estate.io.vn}
       - REACT_APP_ENV=production
     ports:
       - "6868:80"
@@ -64,6 +65,8 @@ services:
       - vinhomes-golden-city-network
     security_opt:
       - no-new-privileges:true
+    volumes:
+      - ./frontend/.env.production:/usr/share/nginx/html/.env.production
 
   # Optional: Add monitoring with Watchtower for auto-updates
   watchtower:
@@ -104,6 +107,3 @@ services:
 networks:
   vinhomes-golden-city-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16

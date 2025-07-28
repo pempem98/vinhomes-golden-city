@@ -7,7 +7,8 @@ import ConnectionStatus from './components/ConnectionStatus';
 import { SOCKET_EVENTS, APP_CONFIG } from './constants';
 import { t } from './locales';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || APP_CONFIG.DEFAULT_BACKEND_URL;
+// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || APP_CONFIG.DEFAULT_BACKEND_URL;
+const BACKEND_URL = "https://vinhomes-golden-city.real-estate.io.vn";
 
 function App() {
   const [apartments, setApartments] = useState([]);

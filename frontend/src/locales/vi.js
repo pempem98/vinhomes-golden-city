@@ -84,7 +84,7 @@ export const vi = {
 
   // Dashboard
   dashboard: {
-    title: 'SỰ KIỆN BÁN HÀNG - KHU MẶT TRỜI',
+    title: 'RÁP CĂN - KHU MẶT TRỜI',
     subtitle: 'Dự án bất động sản Vinhomes Dương Kinh',
     realtime: 'Thời gian thực'
   },

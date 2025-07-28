@@ -67,10 +67,10 @@ if ! command -v docker-compose &> /dev/null; then
     print_info "Installing Docker Compose..."
     
     # Download Docker Compose
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose
     
     # Make it executable
-    sudo chmod +x /usr/local/bin/docker-compose
+    sudo chmod +x /usr/bin/docker-compose
     
     print_status "Docker Compose installed successfully"
 else
@@ -83,7 +83,7 @@ echo "Docker version: $(docker --version)"
 echo "Docker Compose version: $(docker-compose --version)"
 
 # Create application directory
-APP_DIR="/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city"
+APP_DIR="/home/lucasdo/workspace/vinhomes-golden-city"
 print_info "Using application directory at $APP_DIR..."
 
 if [ ! -d "$APP_DIR" ]; then
@@ -119,8 +119,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=/usr/bin/docker-compose up -d
+ExecStop=/usr/bin/docker-compose down
 TimeoutStartSec=0
 
 [Install]
@@ -158,7 +158,7 @@ sudo tee /usr/local/bin/backup-vinhomes-golden-city-db.sh > /dev/null <<'EOF'
 
 BACKUP_DIR="/opt/backups/vinhomes-golden-city"
 DATE=$(date +%Y%m%d_%H%M%S)
-SOURCE_DB="/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/backend/database.sqlite"
+SOURCE_DB="/home/lucasdo/workspace/vinhomes-golden-city/backend/database.sqlite"
 
 # Create backup directory if it doesn't exist
 mkdir -p $BACKUP_DIR
@@ -186,7 +186,7 @@ print_status "Daily backup configured (2 AM)"
 print_info "Setting up log rotation..."
 
 sudo tee /etc/logrotate.d/vinhomes-golden-city > /dev/null <<EOF
-/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/logs/*.log {
+/home/lucasdo/workspace/vinhomes-golden-city/logs/*.log {
     daily
     missingok
     rotate 30
@@ -194,7 +194,7 @@ sudo tee /etc/logrotate.d/vinhomes-golden-city > /dev/null <<EOF
     notifempty
     create 644 root root
     postrotate
-        docker-compose -f /c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/docker-compose.yml restart > /dev/null 2>&1 || true
+        docker-compose -f /home/lucasdo/workspace/vinhomes-golden-city/docker-compose.yml restart > /dev/null 2>&1 || true
     endscript
 }
 EOF

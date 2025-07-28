@@ -208,6 +208,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Server accessible from any IP address on port ${PORT}`);
   console.log(`🔌 WebSocket server ready for connections`);
   console.log(`🔑 Webhook Secret: ${process.env.WEBHOOK_SECRET || 'default-secret-key'}`);
+  console.log(`🌐 Backend URL: ${process.env.REACT_APP_BACKEND_URL}`);
   console.log(`🎯 Frontend URL: ${frontendUrl}`);
   
   // CORS Configuration Display

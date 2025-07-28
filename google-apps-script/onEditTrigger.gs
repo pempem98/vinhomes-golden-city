@@ -4,8 +4,8 @@
  */
 
 // Replace with your actual backend URL and secret key
-const WEBHOOK_URL = 'http://your-ec2-ip:5000/api/update-sheet';
-const WEBHOOK_SECRET = 'your-api-secret-from-env-file'; // Must match API_SECRET in backend .env
+const WEBHOOK_URL = 'https://vinhomes-golden-city.real-estate.io.vn/api/update-sheet';
+const WEBHOOK_SECRET = 'dev-webhook-secret-change-in-production'; // Must match backend
 
 /**
  * Generate HMAC signature for webhook security
@@ -18,7 +18,6 @@ function generateSignature(timestamp, payload) {
     WEBHOOK_SECRET,
     Utilities.Charset.UTF_8
   );
-  // Convert to hex format (backend expects hex, not base64)
   return signature.reduce((str, chr) => {
     chr = (chr < 0 ? chr + 256 : chr).toString(16);
     return str + (chr.length == 1 ? '0' : '') + chr;
@@ -26,15 +25,15 @@ function generateSignature(timestamp, payload) {
 }
 
 /**
- * Enhanced onEdit trigger with security
+ * Enhanced handleEdit trigger with security
  */
-function onEdit(e) {
+function handleEdit(e) {
   try {
     const sheet = e.source.getActiveSheet();
     const range = e.range;
     
     // Only process edits on the main data sheet
-    if (sheet.getName() !== 'Sheet1') {
+    if (sheet.getName() !== 'Vinhomes Duong Kinh') {
       console.log('Edit not on main sheet, ignoring...');
       return;
     }
@@ -48,16 +47,18 @@ function onEdit(e) {
     }
     
     // Get row data with validation
-    const rowData = sheet.getRange(editedRow, 1, 1, 5).getValues()[0];
+    const rowData = sheet.getRange(editedRow, 1, 1, 6).getValues()[0];
     
     // Validate and create payload
     const payload = {
       apartment_id: String(rowData[0] || '').trim(),
       agency: String(rowData[1] || '').trim(),
-      area: parseFloat(rowData[2]) || 0,
-      price: parseFloat(rowData[3]) || 0,
-      status: String(rowData[4] || '').trim()
+      agency_short: String(rowData[2] || '').trim(),
+      area: parseFloat(rowData[3]) || 0,
+      price: parseFloat(rowData[4]) || 0,
+      status: String(rowData[5] || '').trim()
     };
+    console.log('Row Data: ', rowData);
     
     // Validate required fields
     if (!payload.apartment_id) {
@@ -87,7 +88,7 @@ function onEdit(e) {
       return;
     }
     
-    console.log('Sending secure update for apartment:', payload.apartment_id);
+    console.log('Sending secure update for apartment:', payload);
     
     // Send authenticated request
     sendSecureWebhook(payload);
@@ -158,6 +159,7 @@ function testSecureWebhook() {
   const testPayload = {
     apartment_id: 'TEST01',
     agency: 'Test Agency',
+    agency_short: "TA",
     area: 85.5,
     price: 6.2,
     status: 'Đang lock'
@@ -213,9 +215,10 @@ function syncAllDataSecure() {
         const payload = {
           apartment_id: String(rowData[0] || '').trim(),
           agency: String(rowData[1] || '').trim(),
-          area: parseFloat(rowData[2]) || 0,
-          price: parseFloat(rowData[3]) || 0,
-          status: String(rowData[4] || '').trim()
+          agency_short: String(rowData[2] || '').trim(),
+          area: parseFloat(rowData[3]) || 0,
+          price: parseFloat(rowData[4]) || 0,
+          status: String(rowData[5] || '').trim()
         };
         
         // Skip invalid rows
