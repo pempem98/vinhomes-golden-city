@@ -10,7 +10,6 @@ const ApartmentGrid = ({
   viewMode,
   setViewMode
 }) => {
-  const [previousApartments, setPreviousApartments] = useState([]);
   const [visibleApartments, setVisibleApartments] = useState(apartments);
   const [containerWidth, setContainerWidth] = useState(1200); // Better default width
   
@@ -75,7 +74,6 @@ const ApartmentGrid = ({
   }, []);
 
   useEffect(() => {
-    setPreviousApartments([...apartments]);
     setVisibleApartments(apartments); // Always show all apartments, including sold ones
   }, [apartments]);
 

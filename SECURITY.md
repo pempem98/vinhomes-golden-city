@@ -1,4 +1,4 @@
-# Real Estate Dashboard Security Guide
+# Vinhomes Golden City Dashboard Security Guide
 
 ## Hiện tại các lỗ hổng bảo mật đã được phát hiện:
 

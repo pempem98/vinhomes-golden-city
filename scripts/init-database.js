@@ -1,4 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
@@ -168,7 +168,7 @@ function generateApartments(count = 150) {
 
 const sampleApartments = generateApartments(150);
 
-console.log('🏗️  Initializing Real Estate Database');
+console.log('🏗️  Initializing Vinhomes Golden City Database');
 console.log('='.repeat(50));
 
 // Function to check if database is in use
@@ -224,13 +224,7 @@ if (fs.existsSync(DB_PATH)) {
 
 console.log('📊 Creating new database...');
 
-const db = new sqlite3.Database(DB_PATH, (err) => {
-  if (err) {
-    console.error('❌ Error creating database:', err.message);
-    process.exit(1);
-  }
-  console.log('✅ Database file created successfully');
-});
+const db = new Database(DB_PATH);
 
 // Create apartments table with new fields
 const createTableSQL = `
@@ -248,11 +242,9 @@ const createTableSQL = `
   )
 `;
 
-db.run(createTableSQL, (err) => {
-  if (err) {
-    console.error('❌ Error creating table:', err.message);
-    process.exit(1);
-  }
+try {
+  // Create table
+  db.exec(createTableSQL);
   console.log('🏢 Apartments table created successfully');
   
   // Insert sample data
@@ -263,63 +255,56 @@ db.run(createTableSQL, (err) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   
+  const insert = db.prepare(insertSQL);
+  
   let insertedCount = 0;
   const totalCount = sampleApartments.length;
   
-  sampleApartments.forEach((apartment, index) => {
-    db.run(insertSQL, [
-      apartment.id,
-      apartment.zone,
-      apartment.propertyType,
-      apartment.constructionStatus,
-      apartment.agency,
-      apartment.agency_short,
-      apartment.area,
-      apartment.price,
-      apartment.status
-    ], function(err) {
-      if (err) {
-        console.error(`❌ Error inserting ${apartment.id}:`, err.message);
-      } else {
-        insertedCount++;
-        console.log(`✅ Inserted: ${apartment.id} - ${apartment.zone} - ${apartment.propertyType} - ${apartment.status}`);
-        
-        // Check if all inserts are complete
-        if (insertedCount === totalCount) {
-          console.log('\n📋 Database Summary:');
-          console.log('='.repeat(50));
-          
-          // Get counts by status
-          db.all(`
-            SELECT status, COUNT(*) as count 
-            FROM apartments 
-            GROUP BY status
-          `, (err, rows) => {
-            if (err) {
-              console.error('❌ Error getting summary:', err.message);
-            } else {
-              rows.forEach(row => {
-                const emoji = row.status === 'Sẵn hàng' ? '🟢' : 
-                             row.status === 'Đã bán' ? '🔴' : '🟡';
-                console.log(`${emoji} ${row.status}: ${row.count} apartments`);
-              });
-              
-              console.log(`📊 Total: ${totalCount} apartments`);
-              console.log(`💾 Database: ${DB_PATH}`);
-              console.log('\n🎉 Database initialization complete!');
-              console.log('🚀 You can now start the backend server and simulate live updates');
-            }
-            
-            // Close database
-            db.close((err) => {
-              if (err) {
-                console.error('❌ Error closing database:', err.message);
-              }
-              process.exit(0);
-            });
-          });
-        }
-      }
-    });
+  for (const apartment of sampleApartments) {
+    try {
+      insert.run([
+        apartment.id,
+        apartment.zone,
+        apartment.propertyType,
+        apartment.constructionStatus,
+        apartment.agency,
+        apartment.agency_short,
+        apartment.area,
+        apartment.price,
+        apartment.status
+      ]);
+      insertedCount++;
+      console.log(`✅ Inserted: ${apartment.id} - ${apartment.zone} - ${apartment.propertyType} - ${apartment.status}`);
+    } catch (err) {
+      console.error(`❌ Error inserting ${apartment.id}:`, err.message);
+    }
+  }
+  
+  console.log('\n📋 Database Summary:');
+  console.log('='.repeat(50));
+  
+  // Get counts by status
+  const statusCounts = db.prepare(`
+    SELECT status, COUNT(*) as count 
+    FROM apartments 
+    GROUP BY status
+  `).all();
+  
+  statusCounts.forEach(row => {
+    const emoji = row.status === 'Sẵn hàng' ? '🟢' : 
+                 row.status === 'Đã bán' ? '🔴' : '🟡';
+    console.log(`${emoji} ${row.status}: ${row.count} apartments`);
   });
-});
+  
+  console.log(`📊 Total: ${totalCount} apartments`);
+  console.log(`💾 Database: ${DB_PATH}`);
+  console.log('\n🎉 Database initialization complete!');
+  console.log('🚀 You can now start the backend server and simulate live updates');
+  
+  db.close();
+  
+} catch (error) {
+  console.error('❌ Error during database initialization:', error.message);
+  if (db) db.close();
+  process.exit(1);
+}

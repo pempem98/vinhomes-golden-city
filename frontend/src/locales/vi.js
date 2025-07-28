@@ -12,10 +12,8 @@ export const vi = {
     agency: 'Đại lý',
     lastUpdated: 'Cập nhật lần cuối',
     apartmentId: 'Mã căn hộ',
-    status: {
-      connected: 'Đã kết nối',
-      disconnected: 'Mất kết nối'
-    }
+    connected: 'Đã kết nối',
+    disconnected: 'Mất kết nối'
   },
 
   // Status

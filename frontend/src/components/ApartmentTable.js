@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ApartmentGrid from './ApartmentGrid';
 import { t, formatters } from '../locales';
 
@@ -42,7 +42,6 @@ const ApartmentTable = ({ apartments }) => {
           
           // Check table controls wrapping
           if (tableControls) {
-            const rect = tableControls.getBoundingClientRect();
             const children = tableControls.children;
             if (children.length > 1) {
               const firstChild = children[0].getBoundingClientRect();
@@ -54,7 +53,6 @@ const ApartmentTable = ({ apartments }) => {
           
           // Check grid controls wrapping
           if (gridControls && !isWrapped) {
-            const rect = gridControls.getBoundingClientRect();
             const children = gridControls.children;
             if (children.length > 1) {
               const firstChild = children[0].getBoundingClientRect();
@@ -150,11 +148,6 @@ const ApartmentTable = ({ apartments }) => {
         });
 
         if (bigSales.length > 0) {
-          // Categorize sales by level
-          const level1Sales = bigSales.filter(apt => apt.price >= BIG_SALE_THRESHOLDS.LEVEL_1 && apt.price < BIG_SALE_THRESHOLDS.LEVEL_2);
-          const level2Sales = bigSales.filter(apt => apt.price >= BIG_SALE_THRESHOLDS.LEVEL_2 && apt.price < BIG_SALE_THRESHOLDS.LEVEL_3);
-          const level3Sales = bigSales.filter(apt => apt.price >= BIG_SALE_THRESHOLDS.LEVEL_3);
-
           // Create enhanced animation data with levels
           const enhancedBigSales = bigSales.map(apt => {
             let level = 1;
@@ -292,7 +285,8 @@ const ApartmentTable = ({ apartments }) => {
         clearTimeout(timeoutId);
       }
     };
-  }, [bigSaleNotifications, currentNotificationIndex, isProcessingQueue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bigSaleNotifications.length, currentNotificationIndex, isProcessingQueue]);
 
   // Reset queue khi không còn notification
   useEffect(() => {

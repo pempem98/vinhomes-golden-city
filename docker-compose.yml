@@ -4,15 +4,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: real-estate-backend
+    container_name: vinhomes-golden-city-backend
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - PORT=5000
+      - PORT=6867
       - HMAC_SECRET=${HMAC_SECRET}
       - API_SECRET=${API_SECRET}
       - DATABASE_PATH=/app/database.sqlite
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:6868}
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -20,15 +20,15 @@ services:
       - ./backend/database.sqlite:/app/database.sqlite
       - /app/node_modules
     ports:
-      - "5000:5000"
+      - "6867:6867"
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:6867/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     networks:
-      - real-estate-network
+      - vinhomes-golden-city-network
     security_opt:
       - no-new-privileges:true
     tmpfs:
@@ -39,10 +39,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: real-estate-frontend
+    container_name: vinhomes-golden-city-frontend
     restart: unless-stopped
     environment:
-      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:5000}
+      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:6867}
       - REACT_APP_ENV=production
     ports:
       - "6868:80"
@@ -56,14 +56,14 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - real-estate-network
+      - vinhomes-golden-city-network
     security_opt:
       - no-new-privileges:true
 
   # Optional: Add monitoring with Watchtower for auto-updates
   watchtower:
     image: containrrr/watchtower
-    container_name: real-estate-watchtower
+    container_name: vinhomes-golden-city-watchtower
     restart: unless-stopped
     environment:
       - WATCHTOWER_CLEANUP=true
@@ -73,14 +73,14 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - real-estate-network
+      - vinhomes-golden-city-network
     profiles:
       - monitoring
 
   # Optional: Add reverse proxy with SSL
   nginx-proxy:
     image: nginx:alpine
-    container_name: real-estate-proxy
+    container_name: vinhomes-golden-city-proxy
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -90,14 +90,14 @@ services:
       - frontend
       - backend
     networks:
-      - real-estate-network
+      - vinhomes-golden-city-network
     profiles:
       - proxy
 
 # No named volumes needed - using tmpfs for logs
 
 networks:
-  real-estate-network:
+  vinhomes-golden-city-network:
     driver: bridge
     ipam:
       config:

@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 import ApartmentTable from './components/ApartmentTable';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import CurrentTime from './components/CurrentTime';
+import ConnectionStatus from './components/ConnectionStatus';
 import { SOCKET_EVENTS, APP_CONFIG } from './constants';
 import { t } from './locales';
 
@@ -66,6 +67,7 @@ function App() {
         <div className="top-status-bar">
           <div className="connection-status">
             <CurrentTime />
+            <ConnectionStatus isConnected={isConnected} />
           </div>
           <LanguageSwitcher />
         </div>

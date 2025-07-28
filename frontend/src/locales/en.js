@@ -12,10 +12,8 @@ export const en = {
     agency: 'Agency',
     lastUpdated: 'Last Updated',
     apartmentId: 'Apartment ID',
-    status: {
-      connected: 'Connected',
-      disconnected: 'Disconnected'
-    }
+    connected: 'Connected',
+    disconnected: 'Disconnected'
   },
 
   // Status

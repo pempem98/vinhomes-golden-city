@@ -1,7 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:6867';
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'your-secret-key-here-change-this';
 const SIMULATION_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
 const UPDATE_INTERVAL = 1000; // Update every 1 second

@@ -118,10 +118,12 @@ try {
   console.warn('Error reading locale from localStorage:', error);
 }
 
-export default {
+const localeExports = {
   locales,
   getCurrentLocale,
   setLocale,
   t,
   formatters
 };
+
+export default localeExports;

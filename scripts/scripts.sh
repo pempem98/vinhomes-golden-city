@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Real Estate App - Database Management Scripts for Linux/Mac
+# Vinhomes Golden City - Database Management Scripts for Linux/Mac
 # Usage: ./scripts.sh [command]
 
 set -e  # Exit on any error
@@ -23,7 +23,7 @@ CLEAN="🧹"
 
 print_header() {
     echo -e "${BLUE}================================${NC}"
-    echo -e "${PURPLE}  Real Estate Dashboard Scripts${NC}"
+    echo -e "${PURPLE}  Vinhomes Golden City Dashboard Scripts${NC}"
     echo -e "${BLUE}================================${NC}"
 }
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🐳 Setting up Real Estate Dashboard with Docker on EC2..."
+echo "🐳 Setting up Vinhomes Golden City Dashboard with Docker..."
 echo "========================================================"
 
 # Colors for output
@@ -83,15 +83,14 @@ echo "Docker version: $(docker --version)"
 echo "Docker Compose version: $(docker-compose --version)"
 
 # Create application directory
-APP_DIR="/opt/real-estate-dashboard"
-print_info "Creating application directory at $APP_DIR..."
+APP_DIR="/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city"
+print_info "Using application directory at $APP_DIR..."
 
 if [ ! -d "$APP_DIR" ]; then
-    sudo mkdir -p $APP_DIR
-    sudo chown $USER:$USER $APP_DIR
-    print_status "Application directory created"
+    print_error "Application directory not found at $APP_DIR"
+    exit 1
 else
-    print_warning "Application directory already exists"
+    print_status "Application directory found"
 fi
 
 # Setup environment files
@@ -110,9 +109,9 @@ fi
 # Setup systemd service for auto-start
 print_info "Setting up systemd service for auto-start..."
 
-sudo tee /etc/systemd/system/real-estate-dashboard.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/vinhomes-golden-city.service > /dev/null <<EOF
 [Unit]
-Description=Real Estate Dashboard
+Description=Vinhomes Golden City Dashboard
 Requires=docker.service
 After=docker.service
 
@@ -129,7 +128,7 @@ WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable real-estate-dashboard.service
+sudo systemctl enable vinhomes-golden-city.service
 print_status "Systemd service configured"
 
 # Setup firewall rules
@@ -154,12 +153,12 @@ fi
 # Create backup script
 print_info "Creating backup script..."
 
-sudo tee /usr/local/bin/backup-real-estate-db.sh > /dev/null <<'EOF'
+sudo tee /usr/local/bin/backup-vinhomes-golden-city-db.sh > /dev/null <<'EOF'
 #!/bin/bash
 
-BACKUP_DIR="/opt/backups/real-estate"
+BACKUP_DIR="/opt/backups/vinhomes-golden-city"
 DATE=$(date +%Y%m%d_%H%M%S)
-SOURCE_DB="/opt/real-estate-dashboard/backend/database.sqlite"
+SOURCE_DB="/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/backend/database.sqlite"
 
 # Create backup directory if it doesn't exist
 mkdir -p $BACKUP_DIR
@@ -176,18 +175,18 @@ else
 fi
 EOF
 
-sudo chmod +x /usr/local/bin/backup-real-estate-db.sh
+sudo chmod +x /usr/local/bin/backup-vinhomes-golden-city-db.sh
 
 # Setup cron job for daily backup
 print_info "Setting up daily backup cron job..."
-(crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/backup-real-estate-db.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/backup-vinhomes-golden-city-db.sh") | crontab -
 print_status "Daily backup configured (2 AM)"
 
 # Setup log rotation
 print_info "Setting up log rotation..."
 
-sudo tee /etc/logrotate.d/real-estate-dashboard > /dev/null <<EOF
-/opt/real-estate-dashboard/logs/*.log {
+sudo tee /etc/logrotate.d/vinhomes-golden-city > /dev/null <<EOF
+/c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/logs/*.log {
     daily
     missingok
     rotate 30
@@ -195,7 +194,7 @@ sudo tee /etc/logrotate.d/real-estate-dashboard > /dev/null <<EOF
     notifempty
     create 644 root root
     postrotate
-        docker-compose -f /opt/real-estate-dashboard/docker-compose.yml restart > /dev/null 2>&1 || true
+        docker-compose -f /c/Users/DDN5HC/Desktop/local_projects/vinhomes-golden-city/docker-compose.yml restart > /dev/null 2>&1 || true
     endscript
 }
 EOF
@@ -204,13 +203,13 @@ print_status "Log rotation configured"
 
 # Print final instructions
 echo ""
-print_status "EC2 Setup completed successfully!"
+print_status "Service Setup completed successfully!"
 echo ""
 print_info "Next steps:"
-echo "1. Copy your project files to $APP_DIR"
+echo "1. Your project files are already at $APP_DIR"
 echo "2. Edit .env.production with your configuration:"
 echo "   - WEBHOOK_SECRET (use a strong random string)"
-echo "   - REACT_APP_BACKEND_URL (your domain or EC2 IP)"
+echo "   - REACT_APP_BACKEND_URL (your domain or server IP)"
 echo "   - CORS_ORIGIN (allowed domains)"
 echo "3. Build and start the application:"
 echo "   cd $APP_DIR"

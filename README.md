@@ -1,10 +1,10 @@
-# Real Estate Dashboard
+# Vinhomes Golden City Dashboard
 
-Một ứng dụng dashboard thời gian thực để quản lý thông tin bất động sản với khả năng cập nhật trực tiếp và giao diện hiện đại.
+Một ứng dụng dashboard thời gian thực để quản lý thông tin căn hộ Vinhomes Golden City với khả năng cập nhật trực tiếp và giao diện hiện đại.
 
 ## ✨ Tính năng
 
-- 📊 **Dashboard thời gian thực**: Hiển thị dữ liệu bất động sản được cập nhật ngay lập tức
+- 📊 **Dashboard thời gian thực**: Hiển thị dữ liệu căn hộ Vinhomes Golden City được cập nhật ngay lập tức
 - 🔄 **Cập nhật trực tiếp**: Google Apps Script onEdit trigger gửi dữ liệu đến backend webhook
 - 💾 **SQLite Database**: Cache dữ liệu local để truy cập nhanh và lưu trữ bền vững
 - 🎨 **Giao diện hiện đại**: Theme xanh royal tối với phân màu theo trạng thái
@@ -22,7 +22,7 @@ Một ứng dụng dashboard thời gian thực để quản lý thông tin bấ
 ## Project Structure
 
 ```
-/real-estate-app/
+/vinhomes-golden-city/
 ├── /backend/
 │   ├── src/
 │   │   └── server.js           # Main server file
@@ -200,6 +200,79 @@ Health check endpoint.
 1. Use `console.log()` statements in your script
 2. Check the execution logs in the Apps Script editor
 3. Test the webhook manually using the `testWebhook()` function
+
+## 🖥️ Chạy môi trường thường (Không dùng Docker)
+
+### 🚀 Setup nhanh (Tự động)
+
+**Linux/Mac:**
+```bash
+./setup-local.sh
+./run-local.sh
+```
+
+**Windows (Git Bash/WSL):**
+```bash
+./setup-local.sh
+./run-local.sh
+```
+
+> **Lưu ý:** Nếu bạn sử dụng Git Bash trên Windows, có thể chạy trực tiếp file .sh như trên Linux/Mac. Các file .bat/.ps1 đã được loại bỏ vì không cần thiết.
+
+### 📋 Setup thủ công
+
+1. **Cài đặt Node.js dependencies:**
+```bash
+# Backend
+cd backend && npm install
+
+# Frontend  
+cd frontend && npm install
+
+# Scripts
+cd scripts && npm install
+```
+
+2. **Tạo environment files:**
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+3. **Tạo security secrets:**
+```bash
+node -e "console.log('HMAC_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
+node -e "console.log('API_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+4. **Khởi tạo database:**
+```bash
+cd scripts && npm run init-database
+```
+
+5. **Chạy ứng dụng (2 terminals):**
+```bash
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm start
+```
+
+### 🌐 Truy cập
+- **Frontend:** http://localhost:6868 (Mặc định)
+- **Backend:** http://localhost:6867
+
+### 🛑 Dừng ứng dụng
+```bash
+# Linux/Mac/Windows (Git Bash)
+./stop-local.sh
+```
+
+> **Lưu ý cho Windows:** Nếu sử dụng Git Bash, bạn có thể chạy file .sh như trên Linux/Mac.
+
+📖 **Chi tiết:** Xem [RUN-LOCAL-GUIDE.md](./RUN-LOCAL-GUIDE.md)
 
 ## License
 

@@ -26,7 +26,7 @@ export const SOCKET_EVENTS = {
 export const APP_CONFIG = {
   ANIMATION_DURATION: 600,
   DEFAULT_BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 
-                       'http://localhost:5000' // Always fallback to localhost for development
+                       'http://localhost:6867' // Always fallback to localhost for development
 };
 
 export const FIELD_NAMES = {

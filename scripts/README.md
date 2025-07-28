@@ -1,6 +1,6 @@
-# Real Estate Dashboard - Scripts
+# Vinhomes Golden City Dashboard - Scripts
 
-Thư mục này chứa các utility scripts để quản lý database và simulation cho Real Estate Dashboard.
+Thư mục này chứa các utility scripts để quản lý database và simulation cho Vinhomes Golden City Dashboard.
 
 ## 📋 Scripts có sẵn
 
@@ -15,25 +15,7 @@ Thư mục này chứa các utility scripts để quản lý database và simula
 
 ## 🚀 Cách sử dụng
 
-### Windows (PowerShell)
-```powershell
-# Cài đặt dependencies
-.\scripts.ps1 install
-
-# Khởi tạo database
-.\scripts.ps1 init
-
-# Mô phỏng live updates (cần backend server chạy trước)
-.\scripts.ps1 simulate
-
-# Xóa database
-.\scripts.ps1 clean
-
-# Xem trợ giúp
-.\scripts.ps1 help
-```
-
-### Linux/macOS (Bash)
+### Linux/macOS/Windows (Git Bash) - Khuyến nghị
 ```bash
 # Cấp quyền thực thi (chỉ cần làm 1 lần)
 chmod +x scripts.sh
@@ -53,6 +35,9 @@ chmod +x scripts.sh
 # Xem trợ giúp
 ./scripts.sh help
 ```
+
+### Windows (PowerShell - không khuyến nghị)
+> **Lưu ý:** File scripts.ps1 đã được loại bỏ. Nếu bạn sử dụng Git Bash trên Windows, hãy dùng cách Linux/macOS ở trên.
 
 ### Node.js trực tiếp
 ```bash
