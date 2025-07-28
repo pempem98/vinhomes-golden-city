@@ -3,6 +3,10 @@ import ApartmentGrid from './ApartmentGrid';
 import { t, formatters } from '../locales';
 
 const ApartmentTable = ({ apartments }) => {
+  // Feature toggles from environment variables
+  const showBigSaleBanner = process.env.REACT_APP_SHOW_BIG_SALE_BANNER !== 'false';
+  const showStats = process.env.REACT_APP_SHOW_STATS !== 'false';
+  
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [animatingRows, setAnimatingRows] = useState(new Set());
   const [previousApartments, setPreviousApartments] = useState([]);
@@ -441,7 +445,7 @@ const ApartmentTable = ({ apartments }) => {
   return (
     <div>
       {/* Sales Notification Banner - Between header and content */}
-      {bigSaleNotifications.length > 0 && (
+      {showBigSaleBanner && bigSaleNotifications.length > 0 && (
         <div 
           className={`sale-notification-banner ${isChangingNotification ? 'changing' : ''}`}
           data-queue-info={`${currentNotificationIndex + 1}/${bigSaleNotifications.length}`}
@@ -471,13 +475,14 @@ const ApartmentTable = ({ apartments }) => {
         <div className="table-scroll-wrapper">
           {/* Table Stats and View Toggle */}
           <div className="table-controls">
-            <div className="table-stats">
-              {(() => {
-                const stats = getApartmentStats();
-                return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
-              })()}
-            </div>
-            
+            {showStats && (
+              <div className="table-stats">
+                {(() => {
+                  const stats = getApartmentStats();
+                  return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
+                })()}
+              </div>
+            )}
             <div className="view-toggle">
               <button
                 className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
@@ -501,7 +506,6 @@ const ApartmentTable = ({ apartments }) => {
               </button>
             </div>
           </div>
-          
           <table className="apartment-table">
             <thead>
               <tr>

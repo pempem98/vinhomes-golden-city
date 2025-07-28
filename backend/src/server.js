@@ -173,6 +173,51 @@ app.get(API_ENDPOINTS.HEALTH, (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
 
+// --- Admin API: Delete apartment by id or all ---
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'dev-admin-secret';
+
+// Middleware kiểm tra admin secret
+function requireAdminSecret(req, res, next) {
+  const secret = req.headers['x-admin-secret'];
+  if (!secret || secret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Forbidden: Invalid admin secret' });
+  }
+  next();
+}
+
+// Xóa 1 căn theo id
+app.delete('/api/apartment/:id', requireAdminSecret, (req, res) => {
+  const id = req.params.id;
+  try {
+    const stmt = db.prepare(`DELETE FROM ${DATABASE.TABLE_NAME} WHERE ${DATABASE.COLUMNS.ID} = ?`);
+    const result = stmt.run(id);
+    if (result.changes > 0) {
+      // Broadcast update
+      const apartments = getAllApartments();
+      io.emit(SOCKET_EVENTS.APARTMENT_UPDATE, apartments);
+      return res.json({ success: true, deleted: id });
+    } else {
+      return res.status(404).json({ error: 'Not found' });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Xóa toàn bộ record
+app.delete('/api/apartment', requireAdminSecret, (req, res) => {
+  try {
+    const stmt = db.prepare(`DELETE FROM ${DATABASE.TABLE_NAME}`);
+    stmt.run();
+    // Broadcast update
+    const apartments = getAllApartments();
+    io.emit(SOCKET_EVENTS.APARTMENT_UPDATE, apartments);
+    return res.json({ success: true, deletedAll: true });
+  } catch (err) {
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // Socket.IO connection handling
 io.on(SOCKET_EVENTS.CONNECTION, async (socket) => {
   console.log('New client connected:', socket.id);

@@ -50,6 +50,8 @@ services:
     environment:
       - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-https://vinhomes-golden-city.real-estate.io.vn}
       - REACT_APP_ENV=production
+      # - REACT_APP_SHOW_BIG_SALE_BANNER=false
+      # - REACT_APP_SHOW_STATS=false
     ports:
       - "6868:80"
     depends_on:

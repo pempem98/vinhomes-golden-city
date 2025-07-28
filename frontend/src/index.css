@@ -404,7 +404,7 @@ body {
 .table-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: right;
   margin-bottom: 15px;
   padding: 10px 15px;
   background: transparent; /* Remove background */
@@ -426,8 +426,8 @@ body {
 @media (max-width: 900px) {
   /* Controls Layout - Stack vertically when space is limited */
   .table-controls, .grid-controls {
-    justify-content: center;
-    flex-direction: column;
+    justify-content: right;
+    /* flex-direction: column; */
     gap: 10px;
   }
   
@@ -565,7 +565,7 @@ body {
 /* Grid Controls Layout */
 .grid-controls {
   display: flex;
-  justify-content: center; /* Center all items by default */
+  justify-content: right; /* Center all items by default */
   align-items: center;
   margin-bottom: 15px;
   padding: 10px 15px;
@@ -1686,7 +1686,7 @@ body {
 
   .grid-controls {
     flex-direction: row; /* Maintain horizontal layout */
-    justify-content: space-between;
+    justify-content: right;
   }
 
   .grid-stats {
@@ -1704,7 +1704,7 @@ body {
 
   .grid-controls {
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: right;
   }
 
   .grid-stats {

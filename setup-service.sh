@@ -119,7 +119,7 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/docker-compose up -d
+ExecStart=/usr/bin/docker-compose up -d --build
 ExecStop=/usr/bin/docker-compose down
 TimeoutStartSec=0
 

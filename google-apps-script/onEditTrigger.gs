@@ -25,6 +25,67 @@ function generateSignature(timestamp, payload) {
 }
 
 /**
+ * Tạo một menu tùy chỉnh trên giao diện của trang tính khi file được mở.
+ */
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+      .createMenu('⚙️ Công cụ Đồng bộ')
+      .addItem('Đồng bộ Tất cả Dữ liệu', 'syncAllDataSecure')
+      .addItem('Xóa căn hoặc toàn bộ', 'deleteApartmentPrompt')
+      .addToUi();
+}
+
+/**
+ * Prompt user for apartment ID or 'all', then call backend API to delete
+ */
+function deleteApartmentPrompt() {
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.prompt('Xóa căn', 'Nhập mã căn muốn xóa hoặc "all" để xóa toàn bộ:', ui.ButtonSet.OK_CANCEL);
+  if (response.getSelectedButton() !== ui.Button.OK) return;
+  var input = response.getResponseText().trim();
+  if (!input) {
+    ui.alert('Bạn chưa nhập mã căn hoặc "all".');
+    return;
+  }
+  var confirm = ui.alert('Xác nhận',
+    input.toLowerCase() === 'all' ?
+      'Bạn chắc chắn muốn xóa TOÀN BỘ dữ liệu? Hành động này không thể hoàn tác!' :
+      'Bạn chắc chắn muốn xóa căn: ' + input + '?',
+    ui.ButtonSet.YES_NO);
+  if (confirm !== ui.Button.YES) return;
+  deleteApartmentApi(input);
+}
+
+/**
+ * Call backend API to delete apartment or all
+ */
+function deleteApartmentApi(idOrAll) {
+  try {
+    var url = idOrAll.toLowerCase() === 'all'
+      ? 'https://vinhomes-golden-city.real-estate.io.vn/api/apartment'
+      : 'https://vinhomes-golden-city.real-estate.io.vn/api/apartment/' + encodeURIComponent(idOrAll);
+    var options = {
+      method: 'delete',
+      headers: {
+        'X-Admin-Secret': 'dev-admin-secret', // Đổi secret cho production nếu cần
+        'User-Agent': 'GoogleAppsScript-RealEstateDashboard/1.0'
+      },
+      muteHttpExceptions: true
+    };
+    var response = UrlFetchApp.fetch(url, options);
+    var code = response.getResponseCode();
+    var text = response.getContentText();
+    if (code >= 200 && code < 300) {
+      SpreadsheetApp.getUi().alert('Đã xóa thành công!');
+    } else {
+      SpreadsheetApp.getUi().alert('Lỗi xóa: ' + code + '\n' + text);
+    }
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('Lỗi gọi API: ' + e);
+  }
+}
+
+/**
  * Enhanced handleEdit trigger with security
  */
 function handleEdit(e) {

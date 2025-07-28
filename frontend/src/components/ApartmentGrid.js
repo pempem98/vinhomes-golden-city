@@ -10,6 +10,8 @@ const ApartmentGrid = ({
   viewMode,
   setViewMode
 }) => {
+  const showBigSaleBanner = process.env.REACT_APP_SHOW_BIG_SALE_BANNER !== 'false';
+  const showStats = process.env.REACT_APP_SHOW_STATS !== 'false';
   const [visibleApartments, setVisibleApartments] = useState(apartments);
   const [containerWidth, setContainerWidth] = useState(1200); // Better default width
   
@@ -194,12 +196,15 @@ const ApartmentGrid = ({
     }}>
       {/* Grid Controls */}
       <div className="grid-controls">
-        <div className="grid-stats">
-          {(() => {
-            const stats = getApartmentStats();
-            return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
-          })()}
-        </div>
+        {showStats && (
+          <div className="grid-stats" hidden>
+            {(() => {
+              const stats = getApartmentStats();
+              if (!showStats) return null;
+              return `${t('stats.total')} ${t('common.apartments')}: ${stats.total} • ${t('stats.sold')}: ${stats.sold} • ${t('stats.locked')}: ${stats.locked}`;
+            })()}
+          </div>
+        )}
         
         <div className="grid-controls-right">
           <div className="column-slider-container">
