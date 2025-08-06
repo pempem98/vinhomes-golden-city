@@ -134,19 +134,19 @@ const getAllApartments = () => {
 // API Webhook Endpoint
 app.post(API_ENDPOINTS.UPDATE_SHEET, verifyWebhookSignature, validateApartmentData, async (req, res) => {
   try {
-    const { apartment_id, agency, area, price, status } = req.body;
+    const { apartment_id, agency, agency_short, area, price, status } = req.body;
     
     // Safe logging without sensitive data
     console.log(`Received authenticated update for apartment: ${apartment_id}`);
     
     // Insert or replace the apartment data
     const stmt = db.prepare(
-      `INSERT OR REPLACE INTO ${DATABASE.TABLE_NAME} (${DATABASE.COLUMNS.ID}, ${DATABASE.COLUMNS.AGENCY}, ${DATABASE.COLUMNS.AREA}, ${DATABASE.COLUMNS.PRICE}, ${DATABASE.COLUMNS.STATUS}, ${DATABASE.COLUMNS.UPDATED_AT})
-       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+      `INSERT OR REPLACE INTO ${DATABASE.TABLE_NAME} (${DATABASE.COLUMNS.ID}, ${DATABASE.COLUMNS.AGENCY}, ${DATABASE.COLUMNS.AGENCY_SHORT}, ${DATABASE.COLUMNS.AREA}, ${DATABASE.COLUMNS.PRICE}, ${DATABASE.COLUMNS.STATUS}, ${DATABASE.COLUMNS.UPDATED_AT})
+       VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
     );
     
     try {
-      stmt.run(apartment_id, agency, area, price, status);
+      stmt.run(apartment_id, agency, agency_short, area, price, status);
       
       // Get all apartments and broadcast to clients
       const apartments = getAllApartments();

@@ -271,6 +271,7 @@ function syncAllDataSecure() {
     // Process in batches to avoid overwhelming the server
     for (let i = 1; i < values.length; i += batchSize) {
       const batch = values.slice(i, Math.min(i + batchSize, values.length));
+      let serilizedErrorCount = 0;
       
       for (const rowData of batch) {
         const payload = {
@@ -290,11 +291,16 @@ function syncAllDataSecure() {
         try {
           sendSecureWebhook(payload);
           successCount++;
+          serilizedErrorCount = 0
         } catch (error) {
           console.error(`Failed to sync ${payload.apartment_id}:`, error.toString());
           errorCount++;
+          serilizedErrorCount++;
         }
         
+        if (serilizedErrorCount > 5) {
+          break;
+        }
         // Small delay between requests
         Utilities.sleep(200);
       }
