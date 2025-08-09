@@ -9,7 +9,7 @@ export const vi = {
     area: 'Diện tích',
     price: 'Giá',
     status: 'Trạng thái',
-    agency: 'Đại lý',
+    agency: 'Phân khu',
     lastUpdated: 'Cập nhật lần cuối',
     apartmentId: 'Mã căn hộ',
     connected: 'Đã kết nối',
@@ -65,7 +65,7 @@ export const vi = {
   table: {
     headers: {
       apartmentId: 'Mã căn hộ',
-      agency: 'Đại lý',
+      agency: 'Phân khu',
       area: 'Diện tích',
       price: 'Giá',
       status: 'Trạng thái',
@@ -85,7 +85,7 @@ export const vi = {
   // Dashboard
   dashboard: {
     title: 'RÁP CĂN - KHU MẶT TRỜI',
-    subtitle: 'Dự án bất động sản Vinhomes Dương Kinh',
+    subtitle: 'Vinhomes Golden City',
     realtime: 'Thời gian thực'
   },
 

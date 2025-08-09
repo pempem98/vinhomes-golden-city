@@ -182,7 +182,7 @@ const ApartmentTable = ({ apartments }) => {
             message: t('notifications.bigSale.message', {
               level: `${apt.emoji} ${t(`notifications.bigSale.levels.${apt.level}`)}`,
               id: apt.id,
-              price: apt.price.toFixed(1),
+              price: apt.price.toFixed(3),
               currency: t('units.vnd')
             }),
             timestamp: Date.now() + index // Ensure unique timestamps

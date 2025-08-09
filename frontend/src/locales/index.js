@@ -62,12 +62,12 @@ export const t = (key, params = {}) => {
 export const formatters = {
   price: (value, locale = currentLocale) => {
     if (typeof value !== 'number') return t('format.noValue');
-    return t('format.price', { value: value.toFixed(1) });
+    return t('format.price', { value: value.toFixed(3) });
   },
   
   area: (value, locale = currentLocale) => {
     if (typeof value !== 'number') return t('format.noValue');
-    return t('format.area', { value });
+    return t('format.area', { value: value.toFixed(2) });
   },
   
   agency: (agency) => {

@@ -103,29 +103,7 @@ function validateApartmentData(req, res, next) {
 const rateLimitStore = new Map();
 
 function rateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress;
-  const now = Date.now();
-  const windowStart = now - CONFIG.RATE_LIMIT.windowMs;
-  
-  // Clean old entries
-  for (const [key, timestamps] of rateLimitStore.entries()) {
-    rateLimitStore.set(key, timestamps.filter(time => time > windowStart));
-    if (rateLimitStore.get(key).length === 0) {
-      rateLimitStore.delete(key);
-    }
-  }
-  
-  // Check current IP
-  const requests = rateLimitStore.get(ip) || [];
-  const recentRequests = requests.filter(time => time > windowStart);
-  
-  if (recentRequests.length >= CONFIG.RATE_LIMIT.max) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
-  
-  recentRequests.push(now);
-  rateLimitStore.set(ip, recentRequests);
-  
+  // Rate limiting disabled - pass through all requests
   next();
 }
 

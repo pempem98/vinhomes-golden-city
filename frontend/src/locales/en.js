@@ -9,7 +9,7 @@ export const en = {
     area: 'Area',
     price: 'Price',
     status: 'Status',
-    agency: 'Agency',
+    agency: 'Zone',
     lastUpdated: 'Last Updated',
     apartmentId: 'Apartment ID',
     connected: 'Connected',
@@ -65,7 +65,7 @@ export const en = {
   table: {
     headers: {
       apartmentId: 'Apartment ID',
-      agency: 'Agency',
+      agency: 'Zone',
       area: 'Area',
       price: 'Price',
       status: 'Status',
@@ -85,7 +85,7 @@ export const en = {
   // Dashboard
   dashboard: {
     title: 'SALES EVENT - SUNSHINE DISTRICT',
-    subtitle: 'Vinhomes Duong Kinh Real Estate',
+    subtitle: 'Vinhomes Golden City',
     realtime: 'Real-time'
   },
 
